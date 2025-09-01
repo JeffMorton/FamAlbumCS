@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_LastSelectedProfileId>C:\Users\jb_mo\source\repos\FamAlbum\My Project\PublishProfiles\FolderProfile.pubxml</_LastSelectedProfileId>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Update="AddPhoto.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="DisplayInfo.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="DisplayPics.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="EventManagment.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GetDefaultFile.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="My Project\Thum.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="NameEditor.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="NewName.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Select Event.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Start.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Sthumb.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="ThumnaliExtractor.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="VPlayer.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="working.vb">
+      <SubType>Form</SubType>
+    </Compile>
+  </ItemGroup>
+</Project>
