@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Ignore build and IDE folders
 bin/
 obj/
@@ -40,3 +41,47 @@ AppData/
 ffmpeg.exe
 ffprobe.exe
 
+=======
+# Ignore build and IDE folders
+bin/
+obj/
+.vs/
+*.user
+*.suo
+
+# Ignore image processing tools and large assets
+exiftool_files/
+*.jpg
+*.png
+*.tiff
+
+# Ignore logs and temp files
+*.log
+*.tmp
+*.cache
+
+# Ignore IDE-specific folders
+.idea/
+.vscode/
+
+# NuGet and build artifacts
+*.nupkg
+*.snupkg
+*.nuspec
+packages/
+bin/
+obj/
+.vs/
+*.user
+*.suo
+
+# AppData and system folders
+AppData/
+*.log
+*.cache
+*.tmp
+*.vb
+ffmpeg.exe
+ffprobe.exe
+
+>>>>>>> 7cba59675801a0b8e862e7f0276de92de193daa6

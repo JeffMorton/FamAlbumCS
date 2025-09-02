@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Compile Update="DisplayInfo.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="DisplayPic.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GetDefaultFile.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="My Project\Thum.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="NewName.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Select Event.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Start.vb">
+      <SubType>Form</SubType>
+    </Compile>
+  </ItemGroup>
+</Project>
