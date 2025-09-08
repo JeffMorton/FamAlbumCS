@@ -283,7 +283,6 @@ namespace FamAlbum
                 key.Close();
                 return value;
 
-                MessageBox.Show("Registry Value: " + value);
             }
             else
             {

@@ -661,6 +661,7 @@ namespace FamAlbum
             {
                 MessageBox.Show("All files are present!", "Verification Complete");
             }
+            wk.Close();
         }
         public static void UpdateNameCountsManually(SQLiteConnection connection)
         {
@@ -786,6 +787,10 @@ namespace FamAlbum
         }
         public static void CleanPpeoplelistAndUpdateCount(SQLiteConnection connection)
         {
+            var wk = new working();
+            wk.Show();
+            Application.DoEvents();
+
             try
             {
                 var cmdSelect = new SQLiteCommand("SELECT rowid, Ppeoplelist FROM pictures", connection);
@@ -816,6 +821,7 @@ namespace FamAlbum
             {
                 Console.WriteLine("Error cleaning Ppeoplelist and updating PNamecount: " + ex.Message);
             }
+            wk.Close();
         }
 
     }

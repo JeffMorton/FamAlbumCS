@@ -22,10 +22,7 @@ namespace FamAlbum
         private static int itype;
         private readonly static string _connectionString;
         private static List<string> convertedFiles = new List<string>();
-        private static readonly HashSet<string> ExcludedFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-{
-    "SourceCode"
-};
+
         // Constants
         private const string INDEX_MARKER = "_index";
 
@@ -60,7 +57,6 @@ namespace FamAlbum
 
         public static HeavyWorkResult DoHeavyWork()
         {
-            int skipped = 0;
             int processed = 0;
             convertedFiles.Clear();
 
@@ -79,8 +75,7 @@ namespace FamAlbum
 
                 foreach (var imagePath in Directory.EnumerateFiles(dir, "*.*", SearchOption.AllDirectories))
                 {
-                    if (IsInExcludedFolder(imagePath, dir))
-                        continue;
+                    
 
                     string currentFile = imagePath; // Safe copy for mutation
                     string ext = Path.GetExtension(currentFile).ToLowerInvariant();
@@ -88,7 +83,6 @@ namespace FamAlbum
 
                     if (existingFiles.Contains(fname))
                     {
-                        skipped++;
                         continue;
                     }
 
@@ -122,7 +116,7 @@ namespace FamAlbum
 
                     if (!ShouldSkipFile(filename, ref itype))
                     {
-                        ProcessImageFile(fname, currentFile, lpath, ref itype, ref skipped, ref processed, connection);
+                        ProcessImageFile(fname, currentFile, lpath, ref itype, ref processed, connection);
                     }
                 }
 
@@ -130,22 +124,16 @@ namespace FamAlbum
                 {
                     string msg = $"Converted {convertedFiles.Count} disguised PNGs:" + Environment.NewLine +
                                  string.Join(Environment.NewLine, convertedFiles.Take(10));
-                    MessageBox.Show(msg, "Format Fix Report");
+                    //MessageBox.Show(msg, "Format Fix Report");
                 }
 
-                return new HeavyWorkResult { Skipped = skipped, Processed = processed };
+                return new HeavyWorkResult {  Processed = processed };
             }
         }
         
-        private static bool IsInExcludedFolder(string filePath, string rootDir)
-        {
-            string relativePath = Path.GetDirectoryName(filePath).Replace(rootDir, "").TrimStart(Path.DirectorySeparatorChar);
-            string[] segments = relativePath.Split(Path.DirectorySeparatorChar);
+      
 
-            return segments.Any(segment => ExcludedFolders.Contains(segment));
-        }
-
-        public static bool ProcessImageFile(string filename, string imageFile, string lPath, ref int itype, ref int x, ref int y, SQLiteConnection connection)
+        public static bool ProcessImageFile(string filename, string imageFile, string lPath, ref int itype, ref int y, SQLiteConnection connection)
         {
             // If ShouldSkipFile(filename, itype) Then
             // Return True

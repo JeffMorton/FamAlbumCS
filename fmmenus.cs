@@ -125,6 +125,7 @@ namespace FamAlbum
             var connection = Manager.GetConnection();
             SharedCode.VerifyPictureFilesExist(defaultDir);
             SharedCode.CleanPpeoplelistAndUpdateCount(connection);
+          
         }
         public static void MenuitemNoname_Click(object sender, EventArgs e)
         {

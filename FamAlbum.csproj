@@ -40,7 +40,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-windows|x64'">
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
   </PropertyGroup>
-  <ItemGroup>
+	 <PropertyGroup>
+		 <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+		 <PublishReadyToRun>true</PublishReadyToRun>
+	 </PropertyGroup>
+
+	 <ItemGroup>
     <Compile Remove="CcheckFiletType.cs" />
     <Compile Remove="DataParser.Designer.cs" />
     <Compile Remove="DataParser.cs" />
@@ -68,6 +73,7 @@
   <ItemGroup>
     <None Remove="AddPhoto.resx.bak" />
     <None Remove="FamAib.doc" />
+    <None Remove="FamAlbum.sln.bak" />
     <None Remove="ffmpeg.exe" />
     <None Remove="ffprobe.exe" />
   </ItemGroup>

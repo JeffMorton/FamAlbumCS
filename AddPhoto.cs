@@ -415,7 +415,6 @@ namespace FamAlbum
             btnPrior.Click += btnPrior_click;
             btnAdd.Click += btnAdd_click;
             string EventName = "";
-            string EventDetail = "";
             connection = Manager.GetConnection();
             using (connection)
             {
@@ -825,8 +824,9 @@ namespace FamAlbum
 
                     // Remove from unindexedFiles
                     command.CommandText = "DELETE FROM unindexedFiles WHERE uiFilename=@Filename";
-                    command.Parameters["@Filename"].Value = DDir + SFileName;
-                    command.ExecuteNonQuery();
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@Filename",DDir + SFileName);
+                    int result=command.ExecuteNonQuery();
 
                     transaction.Commit();
                 }
@@ -1062,13 +1062,13 @@ namespace FamAlbum
 
 
                             System.Threading.Thread.Sleep(100);
-                            command.CommandText = "Delete from Pictures  WHERE PfileName = @filename";
-                            command.Parameters.AddWithValue("@filename", SFileName);
-                            command.ExecuteNonQuery();
+                            //command.CommandText = "Delete from Pictures  WHERE PfileName = @filename";
+                            //command.Parameters.AddWithValue("@filename", SFileName);
+                            //command.ExecuteNonQuery();
 
-                            // Delete all event and people records
-                            command.CommandText = "Delete from NamePhoto where  npfilename = @filename";
-                            command.ExecuteNonQuery();
+                            //// Delete all event and people records
+                            //command.CommandText = "Delete from NamePhoto where  npfilename = @filename";
+                            //command.ExecuteNonQuery();
                             // Delete Pictures record
                             if (picBox.Image is not null)
                             {
@@ -1084,8 +1084,9 @@ namespace FamAlbum
                             }
 
                             command.CommandText = "Delete from Unindexedfiles where uiFilename = @filename";
-                            command.Parameters["@filename"].Value = SFileName;
-                            command.ExecuteNonQuery();
+                            command.Parameters.Clear();
+                            command.Parameters.AddWithValue("@filename",filePath);
+                            int result=command.ExecuteNonQuery();
 
                             // Commit the transaction if all updates succeed
                             transaction.Commit();
@@ -1101,6 +1102,9 @@ namespace FamAlbum
 
                     }
                     TotalCount -= 1;
+                    offset += 1;
+
+                    ProcessNextImage();
                 }
                 catch (Exception ex)
                 {
