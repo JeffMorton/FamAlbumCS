@@ -2,6 +2,7 @@
 using System.Data;
 using System.Data.SQLite;
 using System.Drawing;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 
 namespace FamAlbum
@@ -37,12 +38,19 @@ namespace FamAlbum
             connection = new SQLiteConnection();
 
             cbNamesOnFile = new ComboBox { Location = new Point(20, 20), Width = 200 };
-            lvNamesSelected = new ListBox { Location = new Point(20, 60), Width = 200, Height = 100 };
-            btnContinue = new Button { Text = "Continue", Location = new Point(240, 20) };
+            lvNamesSelected = new ListBox { Location = new Point(20, 60), Width = 200, Height = 100 };            
             Exclusive = new CheckBox { Text = "", Location = new Point(240, 60) };
             lb2 = new Label { Text = "Select Names", Location = new Point(20, 180) };
             menuStrip = new MenuStrip();
-
+            btnContinue = new Button()
+            {
+                Text = "Continue",
+                BackColor = Color.LightBlue,
+                ForeColor = Color.DarkBlue,
+                Font = new Font("Arial", 12f, FontStyle.Bold),
+                Size = new Size(250, 40),
+                Enabled =true
+            };            ;
             btnContinue.Click += btnContinue_Click;
 
             this.Controls.Add(cbNamesOnFile);
@@ -83,7 +91,8 @@ namespace FamAlbum
         cbNamesOnFile.DataSource = dt;
         cbNamesOnFile.DisplayMember = "Name";
         cbNamesOnFile.ValueMember = "ID";
-    }
+
+            }
     catch (SQLiteException ex)
     {
         MessageBox.Show("Database error: " + ex.Message);
@@ -97,6 +106,7 @@ namespace FamAlbum
         if (connection.State == ConnectionState.Open)
             connection.Close();
     }
+           // Start_Shown(this, string.Empty);
 }
 
 private void InitializeUI()
@@ -216,16 +226,7 @@ private void InitializeUI()
                     withBlock3.Location = new Point((int)Math.Round((screenWidth - 400) / 2d + 258d), 600);
                 }
 
-                {
-                    var withBlock4 = btnContinue;
-                    withBlock4.Text = "Continue";
-                    withBlock4.BackColor = Color.LightBlue;
-                    withBlock4.ForeColor = Color.DarkBlue;
-                    withBlock4.Font = new Font("Arial", 12f, FontStyle.Bold);
-                    withBlock4.Size = new Size(250, 40);
-                    withBlock4.Enabled = false;
-                }
-                btnContinue.Click += btnContinue_Click;
+               
                 CenterControl(btnContinue, 630);
                 var dt = new DataTable();
                 dt.Columns.Add("Name", typeof(string));
@@ -263,7 +264,7 @@ private void InitializeUI()
                 cbNamesOnFile.DisplayMember = "Name";
                 cbNamesOnFile.ValueMember = "ID";
                 Cursor = Cursors.Default;
-                //cbNamesOnFile.Focus();
+                cbNamesOnFile.Focus();
             }
 
             catch (Exception ex)

@@ -23,7 +23,6 @@ namespace FamAlbum
         private int Cnt = 0;
         private Label loadingLabel;
         private int x = 0;
-
         private int shownFirstThumbnail = 0; // 0 = not shown, 1 = shown
 
         public Sthumb()
@@ -32,12 +31,12 @@ namespace FamAlbum
             InitializeComponent();
         }
 
-        private void SThumb_FormClosing(object sender, FormClosingEventArgs e)
+        private void SThumb_FormClosed(object sender, FormClosedEventArgs e)
         {
-            flowPanel.SuspendLayout();
-            flowPanel.Controls.Clear(); // Clear the panel
-            flowPanel.ResumeLayout();
-            GC.Collect();
+            this.BeginInvoke((Action)(() =>
+            {
+                flowPanel.Controls.Clear();
+            }));
         }
 
         private void FlowPanel_MouseWheel(object sender, MouseEventArgs e)
@@ -72,18 +71,16 @@ namespace FamAlbum
             menuStrip = fmmenus.fmenus();
             var menuItemExit = new ToolStripMenuItem("Exit") { Font = new Font("Segoe UI", 9.0f, FontStyle.Bold) };
             menuItemExit.Click += MenuItemExit_Click;
-            // Add the Exit item to the MenuStrip
             menuStrip.Items.Add(menuItemExit);
             MainMenuStrip = menuStrip;
             menuStrip.Items.RemoveAt(0);
             menuStrip.Items.Insert(0, menuItemExit);
             Controls.Add(menuStrip);
             flowPanel.Controls.Clear();
-
             // Style and size
 
             Controls.Add(loadingLabel);
-            FormClosing += SThumb_FormClosing;
+            FormClosed += SThumb_FormClosed;
             flowPanel.MouseWheel += FlowPanel_MouseWheel;
             int centerX = (ClientSize.Width - loadingLabel.Width) / 2;
             int centerY = (ClientSize.Height - loadingLabel.Height) / 2;
@@ -293,7 +290,16 @@ namespace FamAlbum
 
         private void MenuItemExit_Click(object sender, EventArgs e)
         {
-            Close();
+            try
+            {
+                this.Dispose();
+            }
+
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Close failed: {ex.Message}");
+            }
+            //this.Close();
         }
 
     }

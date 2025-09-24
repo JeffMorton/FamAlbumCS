@@ -7,9 +7,10 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using AxWMPLib;
 using Microsoft.VisualBasic;
 using Microsoft.VisualBasic.CompilerServices;
+using LibVLCSharp.Shared;
+using LibVLCSharp.WinForms;
 
 namespace FamAlbum
 {
@@ -23,7 +24,6 @@ namespace FamAlbum
         private PictureBox picBox = new PictureBox();
         private MenuStrip menuStrip = new MenuStrip();
         private TextBox Tposition = new TextBox();
-        private int NameCount;
         private List<string> NameArray = new List<string>();
         private Button btnAdd;
         private Button btnNewPerson;
@@ -35,32 +35,29 @@ namespace FamAlbum
 
         private Button btnSavePhoto;
         private Button btnFixOrient;
+        private MediaPlayer _mediaPlayer;
+        private VideoView _videoView;
+        private LibVLC _libVLC;
 
-        private Button BtnRestart;
+        private Button btnRestart;
         private ComboBox cbNamesOnFile = new ComboBox();
         private DataTable dt = new DataTable();
         private TextBox txtRelation;
         private Label lblPosition = new Label();
         private ConnectionManager Manager = new ConnectionManager(SharedCode.GetConnectionString());
         private SQLiteConnection connection = new SQLiteConnection();
-        private int cnt = 1;
         private string mfilename;
-        private string MemberID;
         private string Dfilename;
         private string FileDirectory;
         private Label lbldimen = new Label();
         private int Mheight;
         private int Mwidth;
         private int Playtime;
-        private int screenheight;
-        private int screenwidth;
         private byte[] thumb;
         private TextBox txtFilename = new TextBox();
         public string Etype { get; set; }
         public int EventID { get; set; }
         private string itype;
-        private bool Formchanged = false;
-        private Timer t; // Declare it here so all methods can access it
         public AddPhoto()
         {
             btnAdd = new Button();
@@ -82,7 +79,7 @@ namespace FamAlbum
                 Visible = true,
                 AutoSize = true
             };
-            BtnRestart = new Button();
+            btnRestart = new Button();
             txtRelation = new TextBox()
             {
                 Location = new Point(20, 1120),
@@ -103,6 +100,16 @@ namespace FamAlbum
                 AutoSize = true
             };
             InitializeComponent();
+            _videoView = new VideoView
+            {
+                MediaPlayer = _mediaPlayer,
+                Name = "videoView",
+                Size = new Size(lpw - 50, lph / 2), // Adjust as needed
+                Location = new Point(40, 50) // Adjust as needed
+            };
+
+            rhp.Controls.Add(_videoView);
+
         }
 
         static Label initLblDimension()
@@ -130,9 +137,7 @@ namespace FamAlbum
         private TextBox txtEvent = new TextBox();
         private TextBox txtEventDetails = new TextBox();
         private Label lblEvent = new Label();
-        private Image[] ImageData;
         private string DDir;
-        private AxWindowsMediaPlayer pl = new AxWindowsMediaPlayer();
         private Panel lhp = new Panel();
         private Panel rhp = new Panel();
         private int lpw;
@@ -160,6 +165,13 @@ namespace FamAlbum
             menuStrip.Items.RemoveAt(0);
             menuStrip.Items.Insert(0, menuItemExit);
             Controls.Add(menuStrip);
+
+
+            Core.Initialize(); // Required once per app
+
+            _libVLC = new LibVLC(); // This must be done before creating Media
+                                    //var media = new Media(_libVLC, videoPath, FromType.FromPath);
+            _mediaPlayer = new MediaPlayer(_libVLC);
 
             connection = Manager.GetConnection();
             using (var connection = Manager.GetConnection())
@@ -208,6 +220,14 @@ namespace FamAlbum
                 AutoSize = false
             };
 
+            _videoView = new VideoView
+            {
+                MediaPlayer = _mediaPlayer,
+                Name = "videoView",
+                Size = new Size(lpw - 50, lph / 2), // Adjust as needed
+                Location = new Point(40, 50) // Adjust as needed
+            };
+            rhp.Controls.Add(_videoView);
 
             int Rpont = (int)Math.Round(lpw * 0.55d + 50d);
             {
@@ -401,13 +421,13 @@ namespace FamAlbum
             }
             else
             {
-                rhp.Controls.Add(BtnRestart);
+                rhp.Controls.Add(btnRestart);
             }
             if (!string.IsNullOrEmpty(mfilename))
             {
                 // PlayVideo(mfilename)
             }
-            BtnRestart.Click += btnRestart_click;
+            btnRestart.Click += btnRestart_click;
             btnFixOrient.Click += btnFixOrient_click;
             btnNext.Click += btnNext_click;
             btnSavePhoto.Click += btnSavePhoto_click;
@@ -549,8 +569,8 @@ namespace FamAlbum
                 }
                 if (itype == "1")
                 {
-                    pl.Visible = false;
-                    BtnRestart.Visible = false;
+                    _videoView.Visible = false;
+                    btnRestart.Visible = false;
                     picBox.Visible = true;
                     {
                         ref var withBlock = ref picBox;
@@ -602,15 +622,13 @@ namespace FamAlbum
                     picBox.Visible = false;
 
                     {
-                        ref var withBlock1 = ref pl;
-                        withBlock1.Width = lpw;
-                        withBlock1.Height = lph / 2;
-                        withBlock1.Dock = DockStyle.Top;
-                        withBlock1.Visible = true;
+                        picBox.Visible = false;
+                        _videoView.Visible = true;
+                        mfilename = DDir + SFileName;
                     }
 
                     {
-                        var withBlock2 = BtnRestart;
+                        var withBlock2 = btnRestart;
                         withBlock2.Text = "Restart";
                         withBlock2.BackColor = Color.LightBlue;
                         withBlock2.ForeColor = Color.DarkBlue;
@@ -623,20 +641,10 @@ namespace FamAlbum
 
 
                     lbldimen.Text = $"Width: {Mwidth} pixels" + Constants.vbCrLf + Constants.vbCrLf + $"Height: {Mheight} pixels";
-                    BtnRestart.Visible = true;
-                    rhp.Controls.Add(BtnRestart);
-                    rhp.Controls.Add(pl);
+                    btnRestart.Visible = true;
+                    rhp.Controls.Add(btnRestart);
+                    _videoView.Visible = true;
 
-                    if (t != null)
-                    {
-                        t.Stop();
-                        t.Dispose();
-                    }
-                    t = new Timer();
-                    t.Tick += Timer_Tick;
-                       
-                    t.Interval = 100; // Small delay to let the control fully initialize
-                    t.Start();
                     Playvideo(DDir + SFileName);
                 }
                 else
@@ -647,12 +655,7 @@ namespace FamAlbum
 
             }
         }
-        private void Timer_Tick(object sender, EventArgs e)
-        {
-            t.Stop();
-            t.Tick -= Timer_Tick;
-            Playvideo(Dfilename);
-        }
+   
 
         private void FillListview()
         {
@@ -679,7 +682,7 @@ namespace FamAlbum
                         reader1.Close();
                     }
                 }
-                catch (Exception ex)
+                catch 
                 {
                     // MessageBox.Show(ex.Message)
                 }
@@ -965,75 +968,16 @@ namespace FamAlbum
         }
 
 
-        private void Playvideo(string videopath)
+        private void Playvideo(string videoPath)
         {
-            // Ensure the control is created before modifying properties
-            EnsurePlayerReady();
-            if (!pl.Created)
+            if (File.Exists(videoPath))
             {
-                pl.CreateControl();
+                var media = new Media(_libVLC, videoPath, FromType.FromPath);
+                _mediaPlayer.Play(media);
             }
-            Process[] processes = Process.GetProcessesByName("wmplayer"); // For classic Windows Media Player
-            foreach (Process proc in processes)
-            {
-                try
-                {
-                    proc.Kill();
-                    proc.WaitForExit();
-                    Console.WriteLine("Windows Media Player closed.");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Error closing Windows Media Player: " + ex.Message);
-                }
-            }
-            // Set video path and play
-            if (pl is not null && pl.Created && pl.IsHandleCreated)
-            {
-                try
-                {
-                    pl.URL = videopath;
-                    pl.uiMode = "none";
-                    pl.Ctlcontrols.play();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Playback error: " + ex.Message);
-                }
-            }
-            else
-            {
-                MessageBox.Show("Player not ready: handle or control not created.");
-            }
+            // btnRestart.Location = new Point(_videoView.Left + _videoView.Width / 2 - btnRestart.Width / 2, _videoView.Bottom + 50);
         }
-        private void EnsurePlayerReady()
-        {
-            if (pl is null || !pl.Created || !pl.IsHandleCreated)
-            {
-                // If already exists, clean up
-                if (pl is not null)
-                {
-                    lhp.Controls.Remove(pl);
-                    pl.Dispose();
-                }
 
-                // Recreate and set up
-                pl = new AxWindowsMediaPlayer();
-                pl.CreateControl();
-                pl.uiMode = "none";
-                pl.stretchToFit = true;
-                pl.Visible = true;
-
-                // Set size/position
-                int vidHeight = (int)Math.Round(0.95d * (screenheight / 2d));
-                int vidWidth = (int)Math.Round(vidHeight / 1.6d);
-                pl.Size = new Size(vidWidth, vidHeight);
-                pl.Location = new Point(lhp.Width - vidWidth - 50, 250);
-
-                rhp.Controls.Add(pl);
-                pl.BringToFront();
-            }
-        }
 
         private void btnDelete_click(object sender, EventArgs e)
         {
@@ -1148,10 +1092,8 @@ namespace FamAlbum
         }
         private void btnRestart_click(object sender, EventArgs e)
         {
-            if (pl.Ctlcontrols.currentPosition == 0d)
-            {
-                pl.Ctlcontrols.play();
-            }
+            _mediaPlayer.Stop();
+            _mediaPlayer.Play();
         }
 
 
@@ -1213,7 +1155,7 @@ namespace FamAlbum
             else
             {
                 selectedname = SharedCode.GetMemberID(lvNames.SelectedItems[0].Text, "");
-                newplist = SharedCode.DeleteAPerson(selectedname, SFileName, NameCount);
+                newplist = SharedCode.DeleteAPerson(selectedname, SFileName);
                 NameArray.Remove(selectedname);
                 Debug.WriteLine($"Attempting delete: [{SFileName}]");
                 Debug.WriteLine($"Length: {SFileName.Length}");
@@ -1228,7 +1170,6 @@ namespace FamAlbum
                     Console.WriteLine(Result);
                 }
             }
-            Formchanged = true;
             FillListview();
         }
 

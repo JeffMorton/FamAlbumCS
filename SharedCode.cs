@@ -227,9 +227,9 @@ namespace FamAlbum
                 }
             }
         }
-        public static string DeleteAPerson(string name, string filename, int Namecount)
+        public static string DeleteAPerson(string name, string filename)
         {
-
+            int Namecount = 0;
             connection = Manager.GetConnection();
             string plist = GetPPeopleList(filename, ref Namecount);
             string newplist = ModifyPeopleList(plist, 0, -1, name);
@@ -280,69 +280,7 @@ namespace FamAlbum
             }
             return newplist;
         }
-        public static List<string> AddNametoPeopleList(string Name, int pos, string filename)
-        {
-            string updatednamelist;
-            var Namecount = default(int);
-            // Get the current list of names
-            string namelist = GetPPeopleList(filename, ref Namecount);
-            if (namelist == "1")
-                namelist = "";
-            var items = namelist.Split(',').ToList();
-
-            // Insert the new name at the specified position
-            if (pos >= 0 & pos <= items.Count)
-            {
-                items.Insert(pos, Name.ToString());
-            }
-            else
-            {
-                namelist = namelist + "," + Name;
-            }
-            Namecount = items.Count;
-            // Convert the list back to an integer array
-
-            // Update the name list
-            try
-            {
-                updatednamelist = string.Join(",", items);
-            }
-            catch 
-            {
-                // Handle any exception and log it if necessary
-                updatednamelist = string.Join(",", items) + "," + Name;
-            }
-
-            SavePPeopleList(updatednamelist, Name, filename, Namecount);
-            return items;
-        }
-        public static List<string> AddNametoNamelist(string Name, int pos, List<string> items)
-        {
-            // Sanitize the incoming name
-            string cleanName = Name.Trim();
-
-            // Only add if it's not blank
-            if (!string.IsNullOrWhiteSpace(cleanName))
-            {
-                if (items.Count == 0)
-                {
-                    items.Add(cleanName);
-                }
-                else if (pos >= 0 && pos <= items.Count)
-                {
-                    items.Insert(pos, cleanName);
-                }
-                else
-                {
-                    items.Add(cleanName);
-                }
-            }
-
-            // Clean the entire list: trim and remove blanks
-            var cleanedList = items.Select(s => s.Trim()).Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
-
-            return cleanedList;
-        }
+     
 
         public static string GetConnectionString()
         {
@@ -823,6 +761,9 @@ namespace FamAlbum
             }
             wk.Close();
         }
+        
+
+
 
     }
 }

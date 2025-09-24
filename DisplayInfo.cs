@@ -1,4 +1,9 @@
-﻿using System;
+﻿using FamAlbum.My;
+using LibVLCSharp.Shared;
+using LibVLCSharp.WinForms;
+using Microsoft.VisualBasic;
+using Microsoft.VisualBasic.CompilerServices;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
@@ -7,9 +12,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using AxWMPLib;
-using Microsoft.VisualBasic;
-using Microsoft.VisualBasic.CompilerServices;
 
 namespace FamAlbum
 {
@@ -21,15 +23,12 @@ namespace FamAlbum
         public string SFileName { get; set; }
         private PictureBox picBox = new PictureBox();
         private MenuStrip menuStrip = new MenuStrip();
-        private int NameCount;
         private List<string> NameArray;
         private Button btnAdd;
         private Button btnNew;
-        private Button btnUpdateDate;
         private Button BtnDelete;
         private Button BtnUpdateThumb;
-        private Button btnSavedesc;
-
+        private Button btnRestart;
         private Button btnEmbed;
         private TextBox Tposition = new TextBox();
         private ComboBox combobox1 = new ComboBox();
@@ -39,12 +38,9 @@ namespace FamAlbum
 
         private ConnectionManager Manager = new ConnectionManager(SharedCode.GetConnectionString());
         private SQLiteConnection connection = new SQLiteConnection();
-        private int cnt = 1;
         private string mfilename;
         private string MemberID;
         private int TypeI;
-        private int state;
-
         private bool Formchanged = false;
         public Label Label1 = new Label()
         {
@@ -54,7 +50,6 @@ namespace FamAlbum
             Location = new Point(1500, 700)
         };
 
-        private Button BtnRestart;
         private TextBox txtRelation;
 
         public Displayinfo()
@@ -62,12 +57,10 @@ namespace FamAlbum
             lvNames = new ListView();
             btnAdd = new Button();
             btnNew = new Button();
-            btnUpdateDate = new Button();
             BtnDelete = new Button();
             BtnUpdateThumb = new Button();
-            btnSavedesc = new Button();
             btnEmbed = new Button();
-            BtnRestart = new Button();
+            btnRestart = new Button();
             txtRelation = new TextBox()
             {
                 Location = new Point(20, 812),
@@ -131,7 +124,7 @@ namespace FamAlbum
             var init = new Label();
             return (init.Font = new Font(init.Font.FontFamily, 12f), init.Size = new Size(800, 30), init.Text = "Name", init.Location = new Point(20, 720), init.Visible = false, init.AutoSize = true, init).init;
         }
-
+        private bool waitingToClose = false;
         private Label lblName1 = initLblName1();
         private Button btnUpdate;
         private Button btnCancel;
@@ -146,7 +139,9 @@ namespace FamAlbum
         private Label lblEvent = new Label();
         private Image[] ImageData;
         private string DDir;
-        private AxWindowsMediaPlayer pl = new AxWindowsMediaPlayer();
+        private LibVLC _libVLC;
+        private MediaPlayer _mediaPlayer;
+        private VideoView _videoView;
         private Panel lhp = new Panel();
         private Panel rhp = new Panel();
         public event SubFormClosingEventHandler SubFormClosing;
@@ -172,6 +167,15 @@ namespace FamAlbum
             Controls.Add(menuStrip);
             dt.Columns.Add("Names", typeof(string));
             dt.Columns.Add("Relation", typeof(string));
+            btnRestart.Click += btnRestart_Click;
+
+            Core.Initialize(); // Required once per app
+
+            _libVLC = new LibVLC();
+            _mediaPlayer = new MediaPlayer(_libVLC);
+
+           
+
 
 
             {
@@ -198,7 +202,16 @@ namespace FamAlbum
 
             int lpw = lhp.Width;
             int lph = lhp.Height;
-            Controls.Add(rhp);
+            _videoView = new VideoView
+            {
+                MediaPlayer = _mediaPlayer,
+                Name = "videoView",
+                Size = new Size(lpw - 50, lph / 2), // Adjust as needed
+                Location = new Point(40, 50) // Adjust as needed
+            };
+
+            rhp.Controls.Add(_videoView);
+
             var title = new Label()
             {
                 Text = "Family Album",
@@ -315,18 +328,11 @@ namespace FamAlbum
                     if (TypeI != 1)
                     {
                         picBox.Visible = false;
-
+                        _videoView.Visible = true;
                         mfilename = DDir + SFileName;
-                        {
-                            ref var withBlock12 = ref pl;
-                            withBlock12.Width = (int)Math.Round(screenWidth / 2d);
-                            withBlock12.Height = (int)Math.Round(0.95d * (screenHeight / 2d));
-                            withBlock12.Location = new Point(lhp.Width - pl.Width - 50, 50);
-                            withBlock12.Visible = true;
-                        }
-                        BtnRestart.Visible = true;
-                        rhp.Controls.Add(BtnRestart);
-                        rhp.Controls.Add(pl);
+                       
+                        btnRestart.Visible = true;
+                        rhp.Controls.Add(btnRestart);
                         Playvideo(DDir + SFileName);
                     }
                     else
@@ -339,6 +345,7 @@ namespace FamAlbum
                         }
                         // Display dimensions
                         // Force a true decoupling from the file stream
+                        _videoView.Visible = false;
                         byte[] imgBytes = null;
                         try
                         {
@@ -351,7 +358,7 @@ namespace FamAlbum
 
                             {
                                 ref var withBlock13 = ref picBox;
-                                withBlock13.SizeMode = PictureBoxSizeMode.Zoom;
+                                withBlock13.SizeMode = PictureBoxSizeMode.StretchImage;
                                 withBlock13.Width = (int)Math.Round(screenWidth / 2d);
                                 withBlock13.Location = new Point(lhp.Width - picBox.Width, 50);
                                 withBlock13.Height = (int)Math.Round(0.95d * (screenHeight / 2d));
@@ -419,16 +426,7 @@ namespace FamAlbum
                         withBlock15.Size = new Size(100, 30);
                     }
 
-                    {
-                        var withBlock16 = btnUpdateDate;
-                        withBlock16.Text = "Update Date";
-                        withBlock16.BackColor = Color.LightBlue;
-                        withBlock16.ForeColor = Color.DarkBlue;
-                        withBlock16.Font = new Font("Arial", 12f, FontStyle.Bold);
-                        withBlock16.Size = new Size(220, 40);
-                        withBlock16.Location = new Point(360, 65);
-                        withBlock16.Visible = false;
-                    }
+                   
 
                     Label @init3 = new Label();
                     var lblFile = (@init3.Font = new Font(@init3.Font.FontFamily, 12f), @init3.Text = "Name && location  of Picture  file: " + SFileName, @init3.Location = new Point(50, 150), @init3.AutoSize = true, @init3).@init3;
@@ -439,19 +437,18 @@ namespace FamAlbum
 
                     lvNames.MouseUp += Listbox_Mouseup;
                     txtEvent.MouseUp += Event_Mouseup;
-                    btnUpdateDate.Click += btnUpdateDate_click;
                     btnCancel.Click += btnCancel_click;
-                    btnEmbed.Click += btnEmbed_Click;
                     BtnUpdateThumb.Click += btnUpdateThumb_click;
                     btnUpdate.Click += btnUpdate_click;
                     BtnDelete.Click += btnAdd_click;
                     btnNew.Click += BtnNew_click;
                     btnAdd.Click += btnAdd_click;
-                    BtnRestart.Click += btnRestart_click;
+                    btnRestart.Click += btnRestart_click;
                     BtnDelete.Click += btnDelete_click;
                     SubFormClosing += SubformClosed;
                     btnCopyFile.Click += btnCopyFile_Click;
-                    txtDescription.TextChanged += (se, ev) => btnSavedesc.Visible = true;
+                    txtDescription.TextChanged += (se, ev) => Formchanged = true;
+                    this.FormClosing += new FormClosingEventHandler(OnFormClosing);
                     Controls.Add(title);
                     lhp.Controls.Add(lblPeoplelist);
                     lhp.Controls.Add(lvNames);
@@ -473,18 +470,16 @@ namespace FamAlbum
                     rhp.Controls.Add(txtEventDetails);
                     lhp.Controls.Add(TxtMonth);
                     lhp.Controls.Add(txtYear);
-                    lhp.Controls.Add(btnUpdateDate);
                     lhp.Controls.Add(btnCancel);
                     // lhp.Controls.Add(btnEmbed)
                     // lhp.Controls.Add(BtnUpdateThumb)
-                    rhp.Controls.Add(btnSavedesc);
                     if (TypeI == 1)
                     {
                         rhp.Controls.Add(picBox);
                     }
                     else
                     {
-                        rhp.Controls.Add(BtnRestart);
+                        rhp.Controls.Add(btnRestart);
                     }
                     lhp.Controls.Add(btnCopyFile);
                     if (!string.IsNullOrEmpty(mfilename))
@@ -498,8 +493,6 @@ namespace FamAlbum
             FilllvNames();
             lhp.Controls.Add(btnUpdate);
 
-            string EventName = "";
-            string EventDetail = "";
             connection = Manager.GetConnection();
             using (connection)
             {
@@ -526,8 +519,8 @@ namespace FamAlbum
                     }
                 }
             }
-            int xCenter;
-            int yPosition;
+            int xCenter = 0;
+            int yPosition = 0;
             if (TypeI == 1)
             {
                 // Calculate horizontal center of picbox
@@ -536,25 +529,25 @@ namespace FamAlbum
                 yPosition = picBox.Location.Y + picBox.Height + 10; // Adjust 10 for spacing
             }
             else
-            {
-                xCenter = pl.Location.X + pl.Width / 2 - 800 / 2;
-                yPosition = pl.Location.Y + pl.Height + 10;
-            } // Adjust 10 for spacing
-              // Apply the new location to Control2
-            {
-                ref var withBlock17 = ref lblEvent;
+            {    // Calculate horizontal center of picbox
+                xCenter = _videoView.Location.X + _videoView.Width / 2 - 800 / 2;
+                // Set the vertical position just below picbox
+                yPosition = _videoView.Location.Y + _videoView.Height + 10; // Adjust 10 for spacing
+            }
+                {
+                    ref var withBlock17 = ref lblEvent;
                 withBlock17.Height = 40;
                 withBlock17.Font = new Font("Arial", 12f, FontStyle.Regular);
-                withBlock17.Location = new Point(xCenter, yPosition + 2);
+                withBlock17.Location = new Point(xCenter, yPosition + 70);
                 withBlock17.AutoSize = true;
-                withBlock17.Visible = false;
+                withBlock17.Visible = true;
                 withBlock17.Text = "Event:";
             }
             {
                 ref var withBlock18 = ref lblDescription;
                 withBlock18.Height = 40;
                 withBlock18.Font = new Font("Arial", 12f, FontStyle.Regular);
-                withBlock18.Location = new Point((int)Math.Round(lpw / 2d - 400d), (int)Math.Round(lph / 2d) + 85);
+                withBlock18.Location = new Point(xCenter -20 , yPosition +10);
                 withBlock18.AutoSize = true;
                 withBlock18.Visible = true;
                 withBlock18.Size = new Size(40, 80);
@@ -574,100 +567,83 @@ namespace FamAlbum
                 withBlock19.BorderStyle = BorderStyle.FixedSingle;
             }
             {
-                var withBlock20 = btnSavedesc;
-                withBlock20.Text = "Save";
-                withBlock20.Location = new Point((int)Math.Round(lpw / 2d + 460d), (int)Math.Round(lph / 2d) + 70);
-                withBlock20.BackColor = Color.LightBlue;
-                withBlock20.ForeColor = Color.DarkBlue;
-                withBlock20.Font = new Font("Arial", 12f, FontStyle.Bold);
-                withBlock20.Size = new Size(150, 40);
-                withBlock20.Visible = false;
-            }
-            btnSavedesc.Click += btnSavedesc_click;
-            {
-                var withBlock21 = txtEvent;
-                withBlock21.Location = new Point(xCenter + 75, yPosition + 70);
-                withBlock21.Visible = true;
-                withBlock21.Width = 750;
-                withBlock21.Font = new Font("Arial", 12f, FontStyle.Regular);
-                withBlock21.Height = 40;
-                withBlock21.ReadOnly = true;
-                withBlock21.AutoSize = true;
-                withBlock21.BorderStyle = BorderStyle.None;
-            }
-            {
-                ref var withBlock22 = ref txtEventDetails;
-                withBlock22.Location = new Point(xCenter + 75, yPosition + 120);
-                withBlock22.Width = 750;
-                withBlock22.Font = new Font("Arial", 12f, FontStyle.Regular);
-                withBlock22.Height = 100;
-                // .AutoSize = True
-                withBlock22.BorderStyle = BorderStyle.None;
-                withBlock22.ReadOnly = true;
-                withBlock22.Multiline = true;
-            }
-
-            if (TypeI != 1)
-            {
-                picBox.Visible = false;
-
-                mfilename = DDir + SFileName;
                 {
-                    ref var withBlock23 = ref pl;
-                    withBlock23.Width = (int)Math.Round(screenWidth / 2d);
-                    withBlock23.Height = (int)Math.Round(0.95d * (screenHeight / 2d));
-                    withBlock23.Location = new Point(lhp.Width - pl.Width - 50, 50);
-                    withBlock23.Visible = true;
+                    var withBlock21 = txtEvent;
+                    withBlock21.Location = new Point(xCenter + 105, yPosition + 70);
+                    withBlock21.Visible = true;
+                    withBlock21.Width = 750;
+                    withBlock21.Font = new Font("Arial", 12f, FontStyle.Regular);
+                    withBlock21.Height = 40;
+                    withBlock21.ReadOnly = true;
+                    withBlock21.AutoSize = true;
+                    withBlock21.BorderStyle = BorderStyle.None;
+                }
+                {
+                    ref var withBlock22 = ref txtEventDetails;
+                    withBlock22.Location = new Point(xCenter + 105, yPosition + 120);
+                    withBlock22.Width = 750;
+                    withBlock22.Font = new Font("Arial", 12f, FontStyle.Regular);
+                    withBlock22.Height = 100;
+                    // .AutoSize = True
+                    withBlock22.BorderStyle = BorderStyle.None;
+                    withBlock22.ReadOnly = true;
+                    withBlock22.Multiline = true;
                 }
 
+                if (TypeI != 1)
                 {
-                    var withBlock24 = BtnRestart;
-                    withBlock24.Text = "Restart";
-                    withBlock24.BackColor = Color.LightBlue;
-                    withBlock24.ForeColor = Color.DarkBlue;
-                    withBlock24.Font = new Font("Arial", 12f, FontStyle.Bold);
-                    withBlock24.Size = new Size(220, 40);
-                    withBlock24.Location = new Point(lpw / 2 - 110, txtEventDetails.Top + txtEventDetails.Height + 20);
-                    withBlock24.Visible = false;
-                    withBlock24.AutoSize = true;
-                }
+                    picBox.Visible = false;
 
-                BtnRestart.Visible = true;
-                rhp.Controls.Add(BtnRestart);
-                rhp.Controls.Add(pl);
-                Playvideo(DDir + SFileName);
-            }
-            else
-            {
-                {
-                    ref var withBlock25 = ref picBox;
-                    withBlock25.SizeMode = PictureBoxSizeMode.Zoom;
-                    withBlock25.Width = (int)Math.Round(screenWidth / 2d);
-                    withBlock25.Location = new Point(lhp.Width - picBox.Width, 50);
-                    withBlock25.Height = (int)Math.Round(0.95d * (screenHeight / 2d));
-                    withBlock25.Visible = true;
-                }
-                Image img;
-                try
-                {
-                    using (var fs = new FileStream(DDir + SFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    mfilename = DDir + SFileName;
+
                     {
-                        img = Image.FromStream(fs);
+                        var withBlock24 = btnRestart;
+                       withBlock24.Text = "Restart";
+                        withBlock24.BackColor = Color.LightBlue;
+                        withBlock24.ForeColor = Color.DarkBlue;
+                        withBlock24.Font = new Font("Arial", 12f, FontStyle.Bold);
+                        withBlock24.Size = new Size(220, 40);
+                        withBlock24.Location = new Point(lpw / 2 - 110, txtEventDetails.Top + txtEventDetails.Height + 20);
+                        withBlock24.Visible = false;
+                        withBlock24.AutoSize = true;
                     }
+
+                    btnRestart.Visible = true;
+                    rhp.Controls.Add(btnRestart);
+                    Playvideo(DDir + SFileName);
                 }
-                catch
+                else
                 {
-                    SharedCode.ShowTextInPictureBox(picBox, "Picture Deleted");
+                    {
+                        ref var withBlock25 = ref picBox;
+                        withBlock25.SizeMode = PictureBoxSizeMode.Zoom;
+                        withBlock25.Width = (int)Math.Round(screenWidth / 2d);
+                        withBlock25.Location = new Point(lhp.Width - picBox.Width, 50);
+                        withBlock25.Height = (int)Math.Round(0.95d * (screenHeight / 2d));
+                        withBlock25.Visible = true;
+                    }
+                    Image img;
+                    try
+                    {
+                        using (var fs = new FileStream(DDir + SFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                        {
+                            img = Image.FromStream(fs);
+                        }
+                    }
+                    catch
+                    {
+                        SharedCode.ShowTextInPictureBox(picBox, "Picture Deleted");
+                    }
+
+
+
+                    mfilename = "";
                 }
-
-
-
-                mfilename = "";
+                lhp.Controls.Add(BtnDelete);
+                TxtMonth.TextChanged += Datechanged;
+                txtYear.TextChanged += Datechanged;
+                txtDescription.TextChanged += DescriptionChanged;
             }
-            lhp.Controls.Add(BtnDelete);
-            TxtMonth.TextChanged += Datechanged;
-            txtYear.TextChanged += Datechanged;
-
         }
 
         private void FilllvNames(object sender, EventArgs e)
@@ -813,7 +789,7 @@ namespace FamAlbum
                 int result = (int)Interaction.MsgBox("Are you sure you want to delete the event from this picture?", MsgBoxStyle.YesNo, "Delete Event");
                 if (result == (int)Constants.vbYes)
                 {
-                    SharedCode.DeleteAPerson(EventID, SFileName, NameArray.Count);
+                    SharedCode.DeleteAPerson(EventID, SFileName);
                     lblEvent.Visible = false;
                     txtEvent.Text = "Add Event";
                     txtEventDetails.Visible = false;
@@ -889,9 +865,9 @@ namespace FamAlbum
                 if (lvNames.SelectedItems.Count > 0)
                 {
                     selectedname = SharedCode.GetMemberID(lvNames.SelectedItems[0].Text, "");
-                newplist = SharedCode.DeleteAPerson(selectedname, SFileName, NameCount);
-                NameArray = newplist.Split(",").ToList();
-                connection = Manager.GetConnection();
+                    newplist = SharedCode.DeleteAPerson(selectedname, SFileName );
+                    NameArray = newplist.Split(",").ToList();
+                    connection = Manager.GetConnection();
                     using (connection)
                         try
                         {
@@ -905,7 +881,7 @@ namespace FamAlbum
                         {
                             Debug.WriteLine(ex.Message);
                         }
-               }
+                }
             }
             Tposition.Text = (NameArray.Count + 1).ToString();
 
@@ -947,7 +923,6 @@ namespace FamAlbum
                 {
                     MessageBox.Show("Update error" + ex.Message);
                 }
-            Formchanged = true;
             FilllvNames();
             txtRelation.Visible = false;
             lblRelate.Visible = false;
@@ -958,10 +933,8 @@ namespace FamAlbum
         }
         private void btnRestart_click(object sender, EventArgs e)
         {
-            if (pl.Ctlcontrols.currentPosition == 0d)
-            {
-                pl.Ctlcontrols.play();
-            }
+            _mediaPlayer.Stop();
+            _mediaPlayer.Play();
         }
         private void btnDelete_click(object sender, EventArgs e)
         {
@@ -1008,7 +981,6 @@ namespace FamAlbum
                                 }
                                 // Commit the transaction if all updates succeed
                                 transaction.Commit();
-                                Formchanged = true;
                             }
 
                             Console.WriteLine("Transaction committed successfully.");
@@ -1076,108 +1048,69 @@ namespace FamAlbum
             connection.Close();
         }
 
-        private void btnUpdateDate_click(object sender, EventArgs e)
-        {
-            connection = Manager.GetConnection();
-            int re;
-            using (connection)
-            {
-                // Begin a transaction
-                var transaction = connection.BeginTransaction();
-
-                try
-                {
-                    using (var command = new SQLiteCommand("Update Pictures set PMonth =@month, Pyear=@year WHERE PfileName = @filename", connection))
-                    {
-                        command.Transaction = transaction;
-                        command.Parameters.AddWithValue("@filename", SFileName);
-                        command.Parameters.AddWithValue("@month", Conversions.ToInteger(TxtMonth.Text));
-                        command.Parameters.AddWithValue("@year", Conversions.ToInteger(txtYear.Text));
-                        re = command.ExecuteNonQuery();
-                        transaction.Commit();
-                        Formchanged = true;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // Rollback the transaction if an error occurs
-                    transaction.Rollback();
-                    MessageBox.Show("Update Date Transaction rolled back. Error: " + ex.Message);
-                }
-                btnUpdateDate.Visible = false;
-            }
-        }
-        private void btnSavedesc_click(object sender, EventArgs e)
-        {
-            connection = Manager.GetConnection();
-            int re;
-            using (connection)
-            {
-                // Begin a transaction
-                var transaction = connection.BeginTransaction();
-
-                try
-                {
-                    using (var command = new SQLiteCommand("Update Pictures set Pdescription = @description WHERE PfileName = @filename", connection))
-                    {
-                        command.Transaction = transaction;
-                        command.Parameters.AddWithValue("@filename", SFileName);
-                        command.Parameters.AddWithValue("@description", txtDescription.Text);
-                        re = command.ExecuteNonQuery();
-                        transaction.Commit();
-                        Formchanged = true;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // Rollback the transaction if an error occurs
-                    transaction.Rollback();
-                    MessageBox.Show("Update Date Transaction rolled back. Error: " + ex.Message);
-                }
-            }
-        }
+      
+       
         private void Datechanged(object sender, EventArgs e)
         {
-            btnUpdateDate.Visible = true;
+           Formchanged = true;
+        }
+        private void DescriptionChanged(object sender, EventArgs e)
+        {
+            Formchanged = true;
         }
 
-        private void formclosinhg()
+      
+        private void OnFormClosing(object sender, FormClosingEventArgs e)
         {
-            if (Formchanged == true)
+            if (Formchanged && TypeI == 2)
+            {
+                try
+                {
+                    // Forcefully stop the video
+                    {
+                        _mediaPlayer?.Dispose();
+                        _libVLC?.Dispose();
+                        base.OnFormClosing(e);
+                    }
+                    Savephoto(this, EventArgs.Empty);
+                    SaveMetadata(); // Proceed with saving
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error while stopping video: " + ex.Message);
+                }
+            }
+            else if (Formchanged && TypeI == 1)
+            {
+                Savephoto(this, EventArgs.Empty);
+                SaveMetadata();
+            }
+        }
+
+        private void SaveMetadata()
+        {
+            try
             {
                 string jsonMetadata = jsonlist.BuildJsonFromControls(txtEvent, txtEventDetails, TxtMonth, txtYear, txtDescription, lvNames);
                 jsonlist.WriteJsonMetadataToMediaFile(DDir + SFileName, jsonMetadata);
             }
-
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Metadata write failed: " + ex.Message);
+            }
         }
-        private void Playvideo(string videopath)
+
+        private void Playvideo(string videoPath)
         {
-            // Ensure the control is created before modifying properties
-            if (!pl.Created)
+            if (File.Exists(videoPath))
             {
-                pl.CreateControl();
+                var media = new Media(_libVLC, videoPath, FromType.FromPath);
+                _mediaPlayer.Play(media);
             }
-            Process[] processes = Process.GetProcessesByName("wmplayer"); // For classic Windows Media Player
-            foreach (Process proc in processes)
-            {
-                try
-                {
-                    proc.Kill();
-                    proc.WaitForExit();
-                    Console.WriteLine("Windows Media Player closed.");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Error closing Windows Media Player: " + ex.Message);
-                }
-            }
-            // Set video path and play
-            pl.URL = videopath;
-            pl.uiMode = "none";
-            pl.Ctlcontrols.play();
-
-
+           // btnRestart.Location = new Point(_videoView.Left + _videoView.Width / 2 - btnRestart.Width / 2, _videoView.Bottom + 50);
         }
+
+
         private void btnCopyFile_Click(object sender, EventArgs e)
         {
             var folderDialog = new FolderBrowserDialog();
@@ -1219,7 +1152,7 @@ namespace FamAlbum
             {
 
 
-                pl.PlayStateChange += (senderObj, eArgs) => { if (eArgs.newState == (int)WMPLib.WMPPlayState.wmppsMediaEnded) { pl.Ctlcontrols.stop(); pl.URL = string.Empty; pl.close(); try { jsonMetadata = jsonlist.BuildJsonFromControls(txtEvent, txtEventDetails, TxtMonth, txtYear, txtDescription, lvNames); jsonlist.WriteJsonMetadataToMediaFile(DDir + SFileName, jsonMetadata); } catch (Exception ex) { Debug.WriteLine("Metadata write failed: " + ex.Message); } pl.PlayStateChange -= null; } }; // Optional cleanup
+  //              pl.PlayStateChange += (senderObj, eArgs) => { if (eArgs.newState == (int)WMPLib.WMPPlayState.wmppsMediaEnded) { pl.Ctlcontrols.stop(); pl.URL = string.Empty; pl.close(); try { jsonMetadata = jsonlist.BuildJsonFromControls(txtEvent, txtEventDetails, TxtMonth, txtYear, txtDescription, lvNames); jsonlist.WriteJsonMetadataToMediaFile(DDir + SFileName, jsonMetadata); } catch (Exception ex) { Debug.WriteLine("Metadata write failed: " + ex.Message); } pl.PlayStateChange -= null; } }; // Optional cleanup
             }
         }
         private void btnCancel_click(object sender, EventArgs e)
@@ -1236,5 +1169,171 @@ namespace FamAlbum
             SharedCode.Updatethumb(DDir + SFileName);
 
         }
+    
+           private void Savephoto(object sender, EventArgs e)
+        {
+            string plist = createPeoplelist();
+            var connection = Manager.GetConnection();
+
+
+            using (connection)
+            {
+
+
+                var transaction = connection.BeginTransaction();
+
+                try
+                {
+                    var command = new SQLiteCommand() { Connection = connection, Transaction = transaction };
+
+                    // Create Picture Record
+                    UpdatePictureRecord(command, plist);
+                    // 🔎 Save thumbnail from DB for visual verification
+
+                    UpdateNamePhotoRecords(command, plist);
+
+                    // Handle Event Type Record
+
+                    UpdateEventRecord(command);
+
+
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    MessageBox.Show("Save Date Transaction rolled back. Error: " + ex.Message);
+                }
+            }
+
+            string jsonMetadata = jsonlist.BuildJsonFromControls(txtEvent, txtEventDetails, TxtMonth, txtYear, txtDescription, lvNames);
+            jsonlist.WriteJsonMetadataToMediaFile(DDir + SFileName, jsonMetadata);
+
+        }
+
+        // Encapsulated SQL Methods
+        private void UpdatePictureRecord(SQLiteCommand command, string plist)
+        {
+            command.CommandText = @"
+        UPDATE Pictures 
+        SET 
+            [PDescription] = @PDescription, 
+            [PPeopleList] = @PPeopleList, 
+            [PMonth] = @PMonth, 
+            [PYear] = @PYear, 
+            [PLastModifiedDate] = @PLastModifiedDate, 
+            [PNameCount] = @PNameCount 
+        WHERE 
+            [PFilename] = @Pfilename";
+
+            command.Parameters.AddWithValue("@Pfilename", SFileName);
+            command.Parameters.AddWithValue("@PDescription", txtDescription.Text);
+            command.Parameters.AddWithValue("@PPeopleList", plist);
+            command.Parameters.AddWithValue("@PMonth", TxtMonth.Text);
+            command.Parameters.AddWithValue("@PYear", txtYear.Text);
+            command.Parameters.AddWithValue("@PLastModifiedDate", DateTime.Today);
+            command.Parameters.AddWithValue("@PNameCount", lvNames.Items.Count);
+
+            command.ExecuteNonQuery();
+        }
+
+
+        private void UpdateNamePhotoRecords(SQLiteCommand command, string pList)
+        {
+            var pitems = pList.Split(',').ToList();
+
+            foreach (string pitem in pitems)
+            {
+                int id = Conversions.ToInteger(pitem);
+
+                // Check if the record already exists
+                command.CommandText = @"
+            SELECT COUNT(*) 
+            FROM NamePhoto 
+            WHERE npID = @ID AND npFileName = @Filename";
+
+                command.Parameters.Clear();
+                command.Parameters.AddWithValue("@ID", id);
+                command.Parameters.AddWithValue("@Filename", SFileName);
+
+                int count = Convert.ToInt32(command.ExecuteScalar());
+
+                if (count == 0)
+                {
+                    // Insert only if it doesn't exist
+                    command.CommandText = @"
+                INSERT INTO NamePhoto (npID, npFileName) 
+                VALUES (@ID, @Filename)";
+
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+
+
+        private void UpdateEventRecord(SQLiteCommand command)
+        {
+            // First, check if the record already exists
+            command.CommandText = @"
+        SELECT COUNT(*) 
+        FROM NamePhoto 
+        WHERE npID = @ID AND npFileName = @Filename";
+
+            command.Parameters.Clear();
+            command.Parameters.AddWithValue("@ID", txtEvent.Text);
+            command.Parameters.AddWithValue("@Filename", SFileName);
+
+            int count = Convert.ToInt32(command.ExecuteScalar());
+
+            if (count == 0)
+            {
+                // Insert only if it doesn't exist
+                command.CommandText = @"
+            INSERT INTO NamePhoto (npID, npFileName) 
+            VALUES (@ID, @Filename)";
+
+                command.ExecuteNonQuery();
+            }
+        }
+
+        private string createPeoplelist()
+        {
+            string plist = "";
+            string id;
+
+            if (lvNames.Items.Count == 0)
+            {
+                plist = "1";
+            }
+            else
+            {
+                for (int i = 0; i < lvNames.Items.Count; i++)
+                {
+                    id = SharedCode.GetMemberID(lvNames.Items[i].Text, lvNames.Items[i].SubItems[1].Text);
+
+                    if (string.IsNullOrEmpty(plist))
+                    {
+                        plist = id;
+                    }
+                    else
+                    {
+                        plist += "," + id;
+                    }
+                }
+            }
+
+            return plist;
+        }
+
+        private void btnRestart_Click(object sender, EventArgs e)
+        {
+            _mediaPlayer.Stop();
+            _mediaPlayer.Play();
+        }
+
+
+
+
+
     }
 }

@@ -666,7 +666,7 @@ Public Class Displayinfo
                 Exit Sub
             End Try
             NameArray = ModifyPeopleList(String.Join(",", NameArray), insertIndex, 1, selectedPerson).Split(","c).ToList
-
+            SavePhoto()
             FilllvNames()
             Formchanged = True
             Tposition.Text = CStr(NameArray.Count + 1)
@@ -1053,5 +1053,105 @@ Public Class Displayinfo
         Updatethumb(DDir & SFileName)
 
     End Sub
+    Private void SavePhoto(Object sender, EventArgs e)
+        {
+            String plist = createPeoplelist();
+            var connection = Manager.GetConnection();
+
+
+            Using (connection)
+            {
+
+
+                var transaction = connection.BeginTransaction();
+
+                Try
+                {
+                    var command = New SQLiteCommand() {connection = connection, transaction = transaction};
+
+                    // Create Picture Record
+                    InsertPictureRecord(command, plist);
+                    // 🔎 Save thumbnail from DB for visual verification
+
+                    InsertNamePhotoRecords(command, plist);
+
+                    // Handle Event Type Record
+                    If (Etype!= "No")
+                        InsertEventRecord(command);
+
+                    // Remove from unindexedFiles
+                    command.CommandText = "DELETE FROM unindexedFiles WHERE uiFilename=@Filename";
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@Filename",DDir + SFileName);
+                    int result = command.ExecuteNonQuery();
+
+                    transaction.Commit();
+                }
+                Catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    MessageBox.Show("Save Date Transaction rolled back. Error: " + ex.Message);
+                }
+            }
+
+            String jsonMetadata = jsonlist.BuildJsonFromControls(txtEvent, txtEventDetails, TxtMonth, txtYear, txtDescription, lvNames);
+            jsonlist.WriteJsonMetadataToMediaFile(DDir + SFileName, jsonMetadata);
+
+            // Cleanup UI
+            ResetUI();
+        }
+
+        // Encapsulated SQL Methods
+        Private void InsertPictureRecord(SQLiteCommand command, String plist)
+        {
+            command.CommandText = @"INSERT INTO Pictures ([Pfilename], [PfileDirectory], [PDescription], [PHeight], [PWidth], 
+        [PPeopleList], [PMonth], [PYear], [PSoundFile], [PDateEntered], [PType], [PLastModifiedDate], 
+        [PReviewed], [PTime], [PThumbnail], [PNameCount]) 
+        VALUES (@Pfilename, @PfileDirectory,@PDescription, @PHeight, @PWidth, @PPeopleList, @PMonth, @PYear, 
+        @PSoundFile, @PDateEntered, @PType, @PLastModifiedDate, @PReviewed, @PTime, @PThumbnail, @PNameCount)";
+
+            {
+                var withBlock = command.Parameters;
+                withBlock.AddWithValue("@Pfilename", SFileName);
+                withBlock.AddWithValue("@PfileDirectory", FileDirectory);
+                withBlock.AddWithValue("@PDescription", txtDescription.Text);
+                withBlock.AddWithValue("@PHeight", Mheight);
+                withBlock.AddWithValue("@PWidth", Mwidth);
+                withBlock.AddWithValue("@PPeopleList", plist);
+                withBlock.AddWithValue("@PMonth", TxtMonth.Text);
+                withBlock.AddWithValue("@PYear", txtYear.Text);
+                withBlock.AddWithValue("@PSoundFile", "");
+                withBlock.AddWithValue("@PDateEntered", DateTime.Today);
+                withBlock.AddWithValue("@PType", itype);
+                withBlock.AddWithValue("@PLastModifiedDate", DateTime.Today);
+                withBlock.AddWithValue("@PReviewed", 0);
+                withBlock.AddWithValue("@PTime", Playtime);
+                withBlock.Add(New SQLiteParameter("@PThumbnail", DbType.Binary) { Value = thumb });
+                withBlock.AddWithValue("@PNameCount", lvNames.Items.Count);
+            }
+            command.ExecuteNonQuery();
+        }
+
+        Private void InsertNamePhotoRecords(SQLiteCommand command, String pList)
+        {
+            var pitems = pList.Split(',').ToList();
+            command.CommandText = "INSERT INTO NamePhoto (npID, npFileName) VALUES (@ID, @Filename)";
+            command.Parameters.AddWithValue("@Filename", SFileName);
+            command.Parameters.Add("@ID", DbType.Int32);
+
+            foreach (string pitem in pitems)
+            {
+                command.Parameters["@ID"].Value = Conversions.ToInteger(pitem);
+                command.ExecuteNonQuery();
+            }
+        }
+
+        Private void InsertEventRecord(SQLiteCommand command)
+        {
+            command.CommandText = "INSERT INTO NamePhoto (npID, npFileName) VALUES (@ID, @Filename)";
+            command.Parameters["@ID"].Value = EventID;
+            command.ExecuteNonQuery();
+        }
+
 End Class
 

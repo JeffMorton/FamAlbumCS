@@ -20,7 +20,6 @@ namespace FamAlbum
         private static SQLiteConnection connection = new SQLiteConnection();
         private static byte[] thumbnailBytes;
         private static int itype;
-        private readonly static string _connectionString;
         private static List<string> convertedFiles = new List<string>();
 
         // Constants
@@ -30,10 +29,7 @@ namespace FamAlbum
         private const string SQL_CHECK_EXISTS = "SELECT COUNT(*) FROM Pictures WHERE PFileName = @FileName";
         private const string SQL_SAVE_UNINDEXED = @"INSERT INTO UnindexedFiles (uiFileName, uiDirectory, uiThumb,uiType,uiWidth,uiHeight,uiVtime,uiStatus) 
          VALUES (@filename, @path, @thumb,@type,@width,@height,@time,@Status)";
-        private static string lpath;
         private static int y = 0;
-        private static string filename;
-        private static string fname;
         private static string dir = SharedCode.GetDefaultDir();
 
         public static void RunUnindexedFileSearchWithSplash()
@@ -162,7 +158,7 @@ namespace FamAlbum
 
             extension = extension.TrimStart('.');
             string[] picArray = new string[] { "jpg", "png", "jpeg" };
-            string[] mArray = new string[] { "mov", "mp4", "avi" };
+            string[] mArray = new string[] { "mov", "mp4", "avi", "wmv"};
             if (picArray.Contains(extension))
             {
                 itype = 1;
