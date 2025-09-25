@@ -1,4 +1,8 @@
-﻿using System;
+﻿using LibVLCSharp.Shared;
+using LibVLCSharp.WinForms;
+using Microsoft.VisualBasic;
+using Microsoft.VisualBasic.CompilerServices;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
@@ -7,10 +11,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using Microsoft.VisualBasic;
-using Microsoft.VisualBasic.CompilerServices;
-using LibVLCSharp.Shared;
-using LibVLCSharp.WinForms;
+using System.Xml.Linq;
 
 namespace FamAlbum
 {
@@ -54,10 +55,11 @@ namespace FamAlbum
         private int Mwidth;
         private int Playtime;
         private byte[] thumb;
+        private int TypeI;
         private TextBox txtFilename = new TextBox();
         public string Etype { get; set; }
         public int EventID { get; set; }
-        private string itype;
+        private string I;
         public AddPhoto()
         {
             btnAdd = new Button();
@@ -415,7 +417,7 @@ namespace FamAlbum
             lhp.Controls.Add(btnPrior);
             rhp.Controls.Add(lblDescription);
             rhp.Controls.Add(txtDescription);
-            if (itype == "1")
+            if (TypeI == 1)
             {
                 rhp.Controls.Add(picBox);
             }
@@ -459,11 +461,33 @@ namespace FamAlbum
                     }
                 }
             }
+            int xCenter = 0;
+            int yPosition = 0;
+            int xleft = 0;
+            int xWidth = 0;
+            if (TypeI == 1)
+
+            {
+                // Calculate horizontal center of picbox
+                xCenter = picBox.Location.X + picBox.Width / 2 - 800 / 2;
+                xleft = picBox.Location.X;
+                xWidth = picBox.Width;
+                // Set the vertical position just below picbox
+                yPosition = picBox.Location.Y + picBox.Height + 10; // Adjust 10 for spacing
+            }
+            else
+            {    // Calculate horizontal center of picbox
+                xCenter = _videoView.Location.X + _videoView.Width / 2 - 800 / 2;
+                xleft = _videoView.Location.X;
+                xWidth = _videoView.Width;
+                // Set the vertical position just below picbox
+                yPosition = _videoView.Location.Y + _videoView.Height + 10; // Adjust 10 for spacing
+            }
             {
                 ref var withBlock15 = ref lblDescription;
                 withBlock15.Height = 40;
                 withBlock15.Font = new Font("Arial", 12f, FontStyle.Regular);
-                withBlock15.Location = new Point((int)Math.Round(lpw / 2d - 400d), (int)Math.Round(lph / 2d) + 70);
+                withBlock15.Location = new Point(xleft, yPosition + 20);
                 withBlock15.AutoSize = true;
                 withBlock15.Visible = true;
                 withBlock15.Size = new Size(40, 80);
@@ -473,10 +497,10 @@ namespace FamAlbum
                 ref var withBlock16 = ref txtDescription;
                 withBlock16.Location = new Point();
                 withBlock16.Visible = true;
-                withBlock16.Width = 750;
+                withBlock16.Width = xWidth -lblDescription.Width -20;
                 withBlock16.Font = new Font("Arial", 12f, FontStyle.Regular);
                 withBlock16.Height = 60;
-                withBlock16.Location = new Point((int)Math.Round(lpw / 2d - 300d), (int)Math.Round(lph / 2d) + 40);
+                withBlock16.Location = new Point(xleft + lblDescription.Width, yPosition);
 
                 withBlock16.Multiline = true;
                 withBlock16.AutoSize = true;
@@ -489,7 +513,7 @@ namespace FamAlbum
                 ref var withBlock17 = ref lblEvent;
                 withBlock17.Height = 40;
                 withBlock17.Font = new Font("Arial", 12f, FontStyle.Regular);
-                withBlock17.Location = new Point((int)Math.Round(lpw / 2d - 400d), (int)Math.Round(lph / 2d) + 100);
+                withBlock17.Location = new Point(xleft , yPosition + 100);
                 withBlock17.AutoSize = true;
                 withBlock17.Visible = false;
                 withBlock17.Size = new Size(40, 80);
@@ -502,7 +526,7 @@ namespace FamAlbum
                 withBlock18.Width = 750;
                 withBlock18.Font = new Font("Arial", 12f, FontStyle.Regular);
                 withBlock18.Height = 40;
-                withBlock18.Location = new Point((int)Math.Round(lpw / 2d - 300d), (int)Math.Round(lph / 2d) + 100);
+                withBlock18.Location = new Point(xleft + lblDescription.Width, yPosition + 100);
 
                 withBlock18.ReadOnly = true;
                 withBlock18.AutoSize = true;
@@ -511,7 +535,7 @@ namespace FamAlbum
             }
             {
                 ref var withBlock19 = ref txtEventDetails;
-                withBlock19.Location = new Point((int)Math.Round(lpw / 2d - 300d), (int)Math.Round(lph / 2d + 150d));
+                withBlock19.Location = new Point(xleft + lblDescription.Width, yPosition + 150);
                 withBlock19.Width = 750;
                 withBlock19.Font = new Font("Arial", 12f, FontStyle.Regular);
                 withBlock19.Height = 100;
@@ -540,7 +564,7 @@ namespace FamAlbum
                 {
                     if (reader.Read())
                     {
-                        itype = reader["uiType"].ToString();
+                        TypeI =  Convert.ToInt32(reader["uiType"]);
                         Dfilename = reader["uiFilename"].ToString();
                         byte[] imageData = reader["uiThumb"] as byte[];
                         if (imageData is not null && imageData.Length > 0)
@@ -567,7 +591,7 @@ namespace FamAlbum
                     reader.Dispose();
                     txtDescription.Text = "";
                 }
-                if (itype == "1")
+                if (TypeI == 1)
                 {
                     _videoView.Visible = false;
                     btnRestart.Visible = false;
@@ -617,7 +641,7 @@ namespace FamAlbum
                         lblEvent.Visible = true;
                     }
                 }
-                else if (itype == "2")
+                else if (TypeI == 2)
                 {
                     picBox.Visible = false;
 
@@ -868,7 +892,7 @@ namespace FamAlbum
                 withBlock.AddWithValue("@PYear", txtYear.Text);
                 withBlock.AddWithValue("@PSoundFile", "");
                 withBlock.AddWithValue("@PDateEntered", DateTime.Today);
-                withBlock.AddWithValue("@PType", itype);
+                withBlock.AddWithValue("@PType", TypeI);
                 withBlock.AddWithValue("@PLastModifiedDate", DateTime.Today);
                 withBlock.AddWithValue("@PReviewed", 0);
                 withBlock.AddWithValue("@PTime", Playtime);

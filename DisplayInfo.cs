@@ -124,7 +124,6 @@ namespace FamAlbum
             var init = new Label();
             return (init.Font = new Font(init.Font.FontFamily, 12f), init.Size = new Size(800, 30), init.Text = "Name", init.Location = new Point(20, 720), init.Visible = false, init.AutoSize = true, init).init;
         }
-        private bool waitingToClose = false;
         private Label lblName1 = initLblName1();
         private Button btnUpdate;
         private Button btnCancel;
@@ -137,11 +136,13 @@ namespace FamAlbum
         private TextBox txtEvent;
         private TextBox txtEventDetails = new TextBox();
         private Label lblEvent = new Label();
-        private Image[] ImageData;
-        private string DDir;
+       private string DDir;
         private LibVLC _libVLC;
         private MediaPlayer _mediaPlayer;
         private VideoView _videoView;
+        private bool _mediaPlayerDisposed = false;
+        private bool _libVLCDisposed = false;
+
         private Panel lhp = new Panel();
         private Panel rhp = new Panel();
         public event SubFormClosingEventHandler SubFormClosing;
@@ -472,7 +473,7 @@ namespace FamAlbum
                     lhp.Controls.Add(txtYear);
                     lhp.Controls.Add(btnCancel);
                     // lhp.Controls.Add(btnEmbed)
-                    // lhp.Controls.Add(BtnUpdateThumb)
+                    lhp.Controls.Add(BtnUpdateThumb);
                     if (TypeI == 1)
                     {
                         rhp.Controls.Add(picBox);
@@ -521,16 +522,22 @@ namespace FamAlbum
             }
             int xCenter = 0;
             int yPosition = 0;
+            int xleft = 0;
+            int xWidth = 0;
             if (TypeI == 1)
             {
                 // Calculate horizontal center of picbox
                 xCenter = picBox.Location.X + picBox.Width / 2 - 800 / 2;
+                xleft= picBox.Location.X;
+                xWidth = picBox.Width;
                 // Set the vertical position just below picbox
                 yPosition = picBox.Location.Y + picBox.Height + 10; // Adjust 10 for spacing
             }
             else
             {    // Calculate horizontal center of picbox
                 xCenter = _videoView.Location.X + _videoView.Width / 2 - 800 / 2;
+                xleft = _videoView.Location.X; 
+                xWidth= _videoView.Width;
                 // Set the vertical position just below picbox
                 yPosition = _videoView.Location.Y + _videoView.Height + 10; // Adjust 10 for spacing
             }
@@ -538,7 +545,7 @@ namespace FamAlbum
                     ref var withBlock17 = ref lblEvent;
                 withBlock17.Height = 40;
                 withBlock17.Font = new Font("Arial", 12f, FontStyle.Regular);
-                withBlock17.Location = new Point(xCenter, yPosition + 70);
+                withBlock17.Location = new Point(xleft, yPosition + 70);
                 withBlock17.AutoSize = true;
                 withBlock17.Visible = true;
                 withBlock17.Text = "Event:";
@@ -547,7 +554,7 @@ namespace FamAlbum
                 ref var withBlock18 = ref lblDescription;
                 withBlock18.Height = 40;
                 withBlock18.Font = new Font("Arial", 12f, FontStyle.Regular);
-                withBlock18.Location = new Point(xCenter -20 , yPosition +10);
+                withBlock18.Location = new Point(xleft , yPosition +20);
                 withBlock18.AutoSize = true;
                 withBlock18.Visible = true;
                 withBlock18.Size = new Size(40, 80);
@@ -557,10 +564,10 @@ namespace FamAlbum
                 var withBlock19 = txtDescription;
                 withBlock19.Location = new Point();
                 withBlock19.Visible = true;
-                withBlock19.Width = 750;
+                withBlock19.Width = xWidth -lblDescription.Width -20;
                 withBlock19.Font = new Font("Arial", 12f, FontStyle.Regular);
                 withBlock19.Height = 60;
-                withBlock19.Location = new Point((int)Math.Round(lpw / 2d - 300d), (int)Math.Round(lph / 2d) + 60);
+                withBlock19.Location = new Point(xleft + lblDescription.Width, yPosition);
 
                 withBlock19.Multiline = true;
                 withBlock19.AutoSize = true;
@@ -569,7 +576,7 @@ namespace FamAlbum
             {
                 {
                     var withBlock21 = txtEvent;
-                    withBlock21.Location = new Point(xCenter + 105, yPosition + 70);
+                    withBlock21.Location = new Point(xleft + lblDescription.Width, yPosition + 70);
                     withBlock21.Visible = true;
                     withBlock21.Width = 750;
                     withBlock21.Font = new Font("Arial", 12f, FontStyle.Regular);
@@ -580,7 +587,7 @@ namespace FamAlbum
                 }
                 {
                     ref var withBlock22 = ref txtEventDetails;
-                    withBlock22.Location = new Point(xCenter + 105, yPosition + 120);
+                    withBlock22.Location = new Point(xleft + lblDescription.Width, yPosition + 120);
                     withBlock22.Width = 750;
                     withBlock22.Font = new Font("Arial", 12f, FontStyle.Regular);
                     withBlock22.Height = 100;
@@ -679,7 +686,7 @@ namespace FamAlbum
                         }
                     }
                 }
-                catch (Exception ex)
+                catch
                 {
                     // MessageBox.Show(ex.Message)
                 }
@@ -1037,7 +1044,7 @@ namespace FamAlbum
                         }
                     }
                 }
-                catch (Exception ex)
+                catch
                 {
                     // MessageBox.Show(ex.Message)
                 }
@@ -1059,33 +1066,56 @@ namespace FamAlbum
             Formchanged = true;
         }
 
-      
+
         private void OnFormClosing(object sender, FormClosingEventArgs e)
         {
-            if (Formchanged && TypeI == 2)
+            if (TypeI == 2)
             {
                 try
                 {
-                    // Forcefully stop the video
+                    if (!_mediaPlayerDisposed && _mediaPlayer != null)
                     {
-                        _mediaPlayer?.Dispose();
-                        _libVLC?.Dispose();
-                        base.OnFormClosing(e);
+                        try
+                        {
+                            if (_mediaPlayer.IsPlaying)
+                            {
+                                _mediaPlayer.Stop();
+                                System.Threading.Thread.Sleep(100); // Let VLC release threads
+                            }
+                        }
+                        catch (AccessViolationException ave)
+                        {
+                            Debug.WriteLine("Access violation during Stop: " + ave.ToString());
+                        }
+
+                        _mediaPlayer.Dispose();
+                        _mediaPlayerDisposed = true;
                     }
-                    Savephoto(this, EventArgs.Empty);
-                    SaveMetadata(); // Proceed with saving
+
+                    if (!_libVLCDisposed && _libVLC != null)
+                    {
+                        _libVLC.Dispose();
+                        _libVLCDisposed = true;
+                    }
+                }
+                catch (AccessViolationException ave)
+                {
+                    Debug.WriteLine("Access violation during disposal: " + ave.ToString());
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Error while stopping video: " + ex.Message);
+                    MessageBox.Show("Error while stopping video: " + ex.ToString());
                 }
+
             }
-            else if (Formchanged && TypeI == 1)
+
+            if (Formchanged)
             {
                 Savephoto(this, EventArgs.Empty);
                 SaveMetadata();
             }
         }
+
 
         private void SaveMetadata()
         {

@@ -55,8 +55,9 @@ namespace FamAlbum
             Controls.Add(btnRestart);
 
             menuStrip = fmmenus.fmenus();
-            var menuItemExit = new ToolStripMenuItem("Exit");
+            var menuItemExit = new ToolStripMenuItem("Exit") { Font = new Font("Segoe UI", 9.0f, FontStyle.Bold) };
             menuItemExit.Click += MenuItemExit_Click;
+            menuStrip.Items.RemoveAt(0);
             menuStrip.Items.Insert(0, menuItemExit);
             MainMenuStrip = menuStrip;
             Controls.Add(menuStrip);

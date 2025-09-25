@@ -60,7 +60,6 @@ namespace FamAlbum
             InitializeComponent();
             mainForm = parentForm;
         }
-        private string Description;
         private MenuStrip menuStrip = new MenuStrip();
         private Button btnAdd;
         private void NewName_Load(object sender, EventArgs e)

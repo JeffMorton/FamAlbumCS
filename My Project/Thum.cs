@@ -20,7 +20,6 @@ namespace FamAlbum
         private SQLiteConnection connection = new SQLiteConnection();
         private List<string> picList;
         private MenuStrip menuStrip = new MenuStrip();
-        private int Cnt = 0;
 
         public Thum()
         {

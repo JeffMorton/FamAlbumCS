@@ -20,10 +20,8 @@ namespace FamAlbum
         private string[] piclist = new string[5001];
         private MenuStrip menuStrip = new MenuStrip();
 
-        private int Cnt = 0;
         private Label loadingLabel;
         private int x = 0;
-        private int shownFirstThumbnail = 0; // 0 = not shown, 1 = shown
 
         public Sthumb()
         {

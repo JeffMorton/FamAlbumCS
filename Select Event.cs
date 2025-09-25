@@ -20,7 +20,6 @@ namespace FamAlbum
         public string DefaultDir;
         private ConnectionManager Manager = new ConnectionManager(SharedCode.GetConnectionString());
         private SQLiteConnection connection = new SQLiteConnection();
-        private string strEvent;
         private MenuStrip menuStrip = new MenuStrip();
         private ListBox lvNamesSelected = new ListBox();
         private Panel selPanel = new Panel() { Dock = DockStyle.Fill };

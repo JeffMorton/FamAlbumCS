@@ -18,7 +18,6 @@ namespace FamAlbum
     {
         private static ConnectionManager Manager = new ConnectionManager(SharedCode.GetConnectionString());
         private static SQLiteConnection connection = new SQLiteConnection();
-        private static byte[] thumbnailBytes;
         private static int itype;
         private static List<string> convertedFiles = new List<string>();
 
