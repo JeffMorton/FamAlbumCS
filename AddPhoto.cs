@@ -212,6 +212,19 @@ namespace FamAlbum
 
             DDir = SharedCode.GetDefaultDir();
 
+            // Initialize the lvNames control
+            {
+                ref var withBlock9 = ref lvNames;
+                withBlock9.Size = new Size((int)Math.Round(lpw * 0.55d), 450);
+                withBlock9.Location = new Point(30, 235);
+                withBlock9.View = View.Details;
+                withBlock9.FullRowSelect = true;
+                withBlock9.Font = new Font("Arial", 12f, FontStyle.Regular);
+            }
+
+
+            int Rpont = lvNames.Left + lvNames.Width + 20;
+
             var title = new Label()
             {
                 Text = "Family Album",
@@ -231,7 +244,6 @@ namespace FamAlbum
             };
             rhp.Controls.Add(_videoView);
 
-            int Rpont = (int)Math.Round(lpw * 0.55d + 50d);
             {
                 var withBlock2 = btnAdd;
                 withBlock2.Text = "Add Names";
@@ -314,15 +326,6 @@ namespace FamAlbum
             Label @init = new Label();
             var lblPeoplelist = (@init.Font = new Font(@init.Font.FontFamily, 12f), @init.Text = "People In Picture", @init.Location = new Point(50, 200), @init.Width = 100, @init.Height = 30, @init.AutoSize = true, @init).@init;
 
-            // Initialize the lvNames control
-            {
-                ref var withBlock9 = ref lvNames;
-                withBlock9.Size = new Size((int)Math.Round(lpw * 0.55d), 450);
-                withBlock9.Location = new Point(30, 235);
-                withBlock9.View = View.Details;
-                withBlock9.FullRowSelect = true;
-                withBlock9.Font = new Font("Arial", 12f, FontStyle.Regular);
-            }
 
             lvNames.Columns.Add("FullName", (int)Math.Round(lvNames.Width / 2d - 3d), HorizontalAlignment.Left);
             lvNames.Columns.Add("Relation", (int)Math.Round(lvNames.Width / 2d - 3d), HorizontalAlignment.Left);
@@ -332,22 +335,24 @@ namespace FamAlbum
             cbNamesOnFile.Font = new Font(cbNamesOnFile.Font.FontFamily, 12f);
             dt.Columns.Add("Names", typeof(string));
             dt.Columns.Add("Relation", typeof(string));
-            {
-                ref var withBlock10 = ref Tposition;
-                withBlock10.Location = new Point((int)Math.Round(lpw * 0.55d) + 310, 690);
-                withBlock10.Size = new Size(50, 40);
-                withBlock10.Visible = false;
-                withBlock10.TextAlign = HorizontalAlignment.Left;
-                withBlock10.Text = "1";
-                withBlock10.Font = new Font("Segoe UI", 12f, FontStyle.Regular);
-            }
+
             {
                 ref var withBlock11 = ref lblPosition;
-                withBlock11.Location = new Point((int)Math.Round(lpw * 0.55d) + 100, 690);
-                withBlock11.Size = new Size(200, 40);
+                withBlock11.Location = new Point(Rpont, 690);
+                withBlock11.Size = new Size(187, 40);
                 withBlock11.Text = "Position of new Person";
                 withBlock11.Font = new Font("Arial", 12f, FontStyle.Bold);
                 withBlock11.Visible = false;
+            }
+
+            {
+                ref var withBlock10 = ref Tposition;
+                withBlock10.Location = new Point(Rpont+lblPosition.Width, 685);
+                withBlock10.Size = new Size(40, 40);
+                withBlock10.Visible = false;
+                withBlock10.TextAlign = HorizontalAlignment.Left;
+                withBlock10.Text = "1";
+                withBlock10.Font = new Font("Segoe UI", 14f, FontStyle.Regular);
             }
 
             Label @init1 = new Label();
@@ -603,7 +608,6 @@ namespace FamAlbum
                         withBlock.Location = new Point(lhp.Width - picBox.Width, 50);
                         withBlock.Height = (int)Math.Round(0.95d * lph / 2d);
                         withBlock.Visible = true;
-                        withBlock.BorderStyle = BorderStyle.FixedSingle;
                     }
                     rhp.Controls.Add(picBox);
                     Image img;

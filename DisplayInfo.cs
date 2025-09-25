@@ -233,31 +233,35 @@ namespace FamAlbum
             }
             lvNames.Columns.Add("FullName", (int)Math.Round(lvNames.Width / 2d - 5d), HorizontalAlignment.Left);
             lvNames.Columns.Add("Relation", (int)Math.Round(lvNames.Width / 2d - 5d), HorizontalAlignment.Left);
+            int Rpont = lvNames.Left + lvNames.Width + 20;
 
-            {
-                ref var withBlock3 = ref Tposition;
-                withBlock3.Location = new Point(1005, lvNames.Top + lvNames.Height + 30);
-                withBlock3.Size = new Size(40, 40);
-                withBlock3.Visible = false;
-            }
 
             {
                 ref var withBlock4 = ref lblPosition;
-                withBlock4.Location = new Point(800, lvNames.Top + lvNames.Height + 30);
+                withBlock4.Location = new Point(Rpont, lvNames.Top + lvNames.Height + 30);
                 withBlock4.Size = new Size(200, 40);
                 withBlock4.Text = "Position of new Person";
                 withBlock4.Font = new Font("Arial", 12f, FontStyle.Bold);
                 withBlock4.Visible = false;
             }
+
+
+            {
+                ref var withBlock3 = ref Tposition;
+                withBlock3.Location = new Point(Rpont+lblPosition.Width, lvNames.Top + lvNames.Height +25);
+                withBlock3.Size = new Size(40, 40);
+                withBlock3.Font = new Font("Arial", 14f, FontStyle.Regular);
+                withBlock3.Visible = false;
+            }
+
             {
                 ref var withBlock5 = ref combobox1;
-                withBlock5.Location = new Point(20, lvNames.Top + lvNames.Height + 30);
+                withBlock5.Location = new Point(lvNames.Left, lvNames.Top + lvNames.Height + 30);
                 withBlock5.Size = new Size((int)Math.Round(lpw * 0.6d), 21);
                 withBlock5.Font = new Font("Arial", 12f);
                 withBlock5.Visible = false;
             }
 
-            int Rpont = lvNames.Left + lvNames.Width + 20;
 
             {
                 var withBlock6 = btnAdd;
@@ -359,8 +363,8 @@ namespace FamAlbum
 
                             {
                                 ref var withBlock13 = ref picBox;
-                                withBlock13.SizeMode = PictureBoxSizeMode.StretchImage;
-                                withBlock13.Width = (int)Math.Round(screenWidth / 2d);
+                                withBlock13.SizeMode = PictureBoxSizeMode.Zoom;
+                                withBlock13.Width = lpw;
                                 withBlock13.Location = new Point(lhp.Width - picBox.Width, 50);
                                 withBlock13.Height = (int)Math.Round(0.95d * (screenHeight / 2d));
                                 withBlock13.Visible = true;
@@ -441,11 +445,10 @@ namespace FamAlbum
                     btnCancel.Click += btnCancel_click;
                     BtnUpdateThumb.Click += btnUpdateThumb_click;
                     btnUpdate.Click += btnUpdate_click;
-                    BtnDelete.Click += btnAdd_click;
+                    BtnDelete.Click += btnDelete_click;
                     btnNew.Click += BtnNew_click;
                     btnAdd.Click += btnAdd_click;
                     btnRestart.Click += btnRestart_click;
-                    BtnDelete.Click += btnDelete_click;
                     SubFormClosing += SubformClosed;
                     btnCopyFile.Click += btnCopyFile_Click;
                     txtDescription.TextChanged += (se, ev) => Formchanged = true;
@@ -473,7 +476,7 @@ namespace FamAlbum
                     lhp.Controls.Add(txtYear);
                     lhp.Controls.Add(btnCancel);
                     // lhp.Controls.Add(btnEmbed)
-                    lhp.Controls.Add(BtnUpdateThumb);
+                    //lhp.Controls.Add(BtnUpdateThumb);
                     if (TypeI == 1)
                     {
                         rhp.Controls.Add(picBox);

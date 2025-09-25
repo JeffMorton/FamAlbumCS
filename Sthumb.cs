@@ -213,44 +213,36 @@ namespace FamAlbum
         }
         private void PictureBox_MouseUp(object sender, MouseEventArgs e)
         {
-            PictureBox picBox = (PictureBox)sender;
-            string SfileName = Conversions.ToString(picBox.Tag);
+            if (sender is not PictureBox picBox || picBox.Tag is null) return;
+
+            string sFileName = Conversions.ToString(picBox.Tag);
+
             if (e.Button == MouseButtons.Left)
             {
-                var DisplayPicForm = new DisplayPics();
-                DisplayPicForm.AutoSize = true;
-                DisplayPicForm.StartPosition = FormStartPosition.Manual;
-                StartPosition = FormStartPosition.Manual;
-
-                // Calculate the X position to center the form horizontally
-                int screenWidth = Screen.PrimaryScreen.Bounds.Width;
-                int formWidth = Width;
-                int xPosition = (screenWidth - formWidth) / 2;
-
-                // Set the Y position to 0 (top of the screen)
-
-                if (SharedCode.CMovie(SfileName))
+                var displayPicForm = new DisplayPics
                 {
+                    AutoSize = true,
+                    StartPosition = FormStartPosition.Manual,
+                    SFileName = sFileName,
+                    Location = new Point(
+                        (Screen.PrimaryScreen.Bounds.Width - Width) / 2,
+                        0 // Top of the screen
+                    )
+                };
 
-                    DisplayPicForm.SFileName = SfileName;
-                    DisplayPicForm.Show();
-                }
-                // 
-                else
-                {
-                    DisplayPicForm.SFileName = SfileName;
-                    DisplayPicForm.Show();
-                    // Add more logic here for left-click actions
-                }
+                displayPicForm.Show();
             }
             else if (e.Button == MouseButtons.Right)
             {
-                var di = new Displayinfo();
-                di.SFileName = SfileName;
-                di.Show();
+                var infoForm = new Displayinfo
+                {
+                    SFileName = sFileName
+                };
 
+                infoForm.Show();
             }
         }
+
         private void InitializeFlowLayoutPanel()
         {
             flowPanel.Name = "flowLayoutPanel1";
