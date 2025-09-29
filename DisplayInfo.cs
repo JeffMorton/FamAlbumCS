@@ -257,7 +257,7 @@ namespace FamAlbum
             {
                 ref var withBlock5 = ref combobox1;
                 withBlock5.Location = new Point(lvNames.Left, lvNames.Top + lvNames.Height + 30);
-                withBlock5.Size = new Size((int)Math.Round(lpw * 0.6d), 21);
+                withBlock5.Size = new Size(lvNames.Left+lvNames.Width, 21);
                 withBlock5.Font = new Font("Arial", 12f);
                 withBlock5.Visible = false;
             }
