@@ -1,13 +1,14 @@
 
+using LibVLCSharp.Shared;
+using LibVLCSharp.WinForms;
+using Microsoft.VisualBasic.CompilerServices;
 using System;
 using System.Data.SQLite;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using LibVLCSharp.Shared;
-using LibVLCSharp.WinForms;
-using Microsoft.VisualBasic.CompilerServices;
 
 namespace FamAlbum
 {
@@ -18,18 +19,20 @@ namespace FamAlbum
         private MenuStrip menuStrip = new MenuStrip();
         private Button btnRestart = new Button();
         private VideoView videoView;
-        private LibVLC libVLC;
-        private MediaPlayer mediaPlayer;
+        private LibVLC _libVLC;
+        private MediaPlayer _mediaPlayer;
         private int TypeI;
         private ConnectionManager Manager = new ConnectionManager(SharedCode.GetConnectionString());
         private string mfilename;
+        private bool _mediaPlayerDisposed = false;
+        private bool _libVLCDisposed = false;
 
         public DisplayPics()
         {
             Core.Initialize(); // Required by LibVLC
-            libVLC = new LibVLC();
-            mediaPlayer = new MediaPlayer(libVLC);
-            videoView = new VideoView { MediaPlayer = mediaPlayer };
+            _libVLC = new LibVLC();
+            _mediaPlayer = new MediaPlayer(_libVLC);
+            videoView = new VideoView { MediaPlayer = _mediaPlayer };
             InitializeComponent();
         }
 
@@ -38,6 +41,7 @@ namespace FamAlbum
             WindowState = FormWindowState.Maximized;
             int screenWidth = Screen.PrimaryScreen.Bounds.Width;
             int screenHeight = Screen.PrimaryScreen.Bounds.Height;
+            this.FormClosing += new FormClosingEventHandler(OnFormClosing);
 
             videoView.Name = "videoView";
             videoView.Visible = false;
@@ -113,16 +117,16 @@ namespace FamAlbum
             videoView.Visible = true;
             btnRestart.Visible = true;
 
-            var media = new Media(libVLC, path, FromType.FromPath);
-            mediaPlayer.Play(media);
+            var media = new Media(_libVLC, path, FromType.FromPath);
+            _mediaPlayer.Play(media);
 
             btnRestart.Location = new Point(videoView.Left + videoView.Width / 2 - btnRestart.Width / 2, videoView.Bottom + 50);
         }
 
         private void btnRestart_Click(object sender, EventArgs e)
         {
-            mediaPlayer.Stop();
-            mediaPlayer.Play();
+            _mediaPlayer.Stop();
+            _mediaPlayer.Play();
         }
 
         private void MenuItemExit_Click(object sender, EventArgs e)
@@ -152,11 +156,47 @@ namespace FamAlbum
             return resizedImg;
         }
 
-        protected override void OnFormClosing(FormClosingEventArgs e)
+        private void OnFormClosing(object sender, FormClosingEventArgs e)
         {
-            mediaPlayer?.Dispose();
-            libVLC?.Dispose();
-            base.OnFormClosing(e);
+            if (TypeI == 2)
+            {
+                try
+                {
+                    if (!_mediaPlayerDisposed && _mediaPlayer != null)
+                    {
+                        try
+                        {
+                            if (_mediaPlayer.IsPlaying)
+                            {
+                                _mediaPlayer.Stop();
+                                System.Threading.Thread.Sleep(100); // Let VLC release threads
+                            }
+                        }
+                        catch (AccessViolationException ave)
+                        {
+                            Debug.WriteLine("Access violation during Stop: " + ave.ToString());
+                        }
+
+                        _mediaPlayer.Dispose();
+                        _mediaPlayerDisposed = true;
+                    }
+
+                    if (!_libVLCDisposed && _libVLC != null)
+                    {
+                        _libVLC.Dispose();
+                        _libVLCDisposed = true;
+                    }
+                }
+                catch (AccessViolationException ave)
+                {
+                    Debug.WriteLine("Access violation during disposal: " + ave.ToString());
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error while stopping video: " + ex.ToString());
+                }
+
+            }
         }
     }
 
