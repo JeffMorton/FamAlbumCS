@@ -18,14 +18,14 @@ namespace FamAlbum
 
     public partial class AddPhoto
     {
-        private ListView lvNames = new ListView();
-        public Label Label1 { get; set; } = new Label();
+        private ListView lvNames = new();
+        public Label Label1 { get; set; } = new();
         private NewName New1;
         public string SFileName { get; set; }
-        private PictureBox picBox = new PictureBox();
-        private MenuStrip menuStrip = new MenuStrip();
-        private TextBox Tposition = new TextBox();
-        private List<string> NameArray = new List<string>();
+        private PictureBox picBox = new();
+        private MenuStrip menuStrip = new ();
+        private TextBox Tposition = new ();
+        private List<string> NameArray = new();
         private Button btnAdd;
         private Button btnNewPerson;
         private Button btnNext;
@@ -50,7 +50,7 @@ namespace FamAlbum
         private string mfilename;
         private string Dfilename;
         private string FileDirectory;
-        private Label lbldimen = new Label();
+        private Label lbldimen = new();
         private int Mheight;
         private int Mwidth;
         private int Playtime;
@@ -59,7 +59,6 @@ namespace FamAlbum
         private TextBox txtFilename = new TextBox();
         public string Etype { get; set; }
         public int EventID { get; set; }
-        private string I;
         public AddPhoto()
         {
             btnAdd = new Button();
