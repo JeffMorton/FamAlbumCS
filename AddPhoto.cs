@@ -330,8 +330,8 @@ namespace FamAlbum
             lvNames.Columns.Add("FullName", (int)Math.Round(lvNames.Width / 2d - 3d), HorizontalAlignment.Left);
             lvNames.Columns.Add("Relation", (int)Math.Round(lvNames.Width / 2d - 3d), HorizontalAlignment.Left);
 
-            cbNamesOnFile.Location = new Point(30, 690);
-            cbNamesOnFile.Size = new Size((int)Math.Round(lpw * 0.55d), 690);
+            cbNamesOnFile.Location = new Point(lvNames.Left, 690);
+            cbNamesOnFile.Size = new Size(lvNames.Width, 690);
             cbNamesOnFile.Font = new Font(cbNamesOnFile.Font.FontFamily, 12f);
             dt.Columns.Add("Names", typeof(string));
             dt.Columns.Add("Relation", typeof(string));
