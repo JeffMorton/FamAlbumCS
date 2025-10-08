@@ -207,8 +207,8 @@ namespace FamAlbum
             {
                 MediaPlayer = _mediaPlayer,
                 Name = "videoView",
-                Size = new Size(lpw - 50, lph / 2), // Adjust as needed
-                Location = new Point(40, 50) // Adjust as needed
+                Size = new Size(lpw - 50, lph / 2), 
+                Location = new Point(40, 20) 
             };
 
             rhp.Controls.Add(_videoView);
@@ -593,7 +593,7 @@ namespace FamAlbum
                     withBlock22.Location = new Point(xleft + lblDescription.Width, yPosition + 120);
                     withBlock22.Width = 750;
                     withBlock22.Font = new Font("Arial", 12f, FontStyle.Regular);
-                    withBlock22.Height = 100;
+                    withBlock22.Height = 80;
                     // .AutoSize = True
                     withBlock22.BorderStyle = BorderStyle.None;
                     withBlock22.ReadOnly = true;
@@ -613,7 +613,7 @@ namespace FamAlbum
                         withBlock24.ForeColor = Color.DarkBlue;
                         withBlock24.Font = new Font("Arial", 12f, FontStyle.Bold);
                         withBlock24.Size = new Size(220, 40);
-                        withBlock24.Location = new Point(lpw / 2 - 110, txtEventDetails.Top + txtEventDetails.Height + 20);
+                        withBlock24.Location = new Point(lpw / 2 - 110, txtEventDetails.Top + txtEventDetails.Height + 10);
                         withBlock24.Visible = false;
                         withBlock24.AutoSize = true;
                     }

@@ -18,7 +18,8 @@ namespace FamAlbum
 {
     static class SharedCode
     {
-        private static ConnectionManager Manager = new ConnectionManager(@"Data Source=C:\Family Album\FamilyAlbum.db;Version=3;");
+        private static ConnectionManager Manager = new ConnectionManager(
+            $"Data Source={GetDefaultDir()}FamilyAlbum.db;Version=3;");
         private static SQLiteConnection connection = new SQLiteConnection();
 
         public static string GetDefaultDir()
