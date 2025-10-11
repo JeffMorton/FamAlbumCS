@@ -106,7 +106,7 @@ namespace FamAlbum
 
             if (NamesSelected[0].StartsWith("NP"))
             {
-                string qryPic = @"SELECT Distinct Pfilename,npFileName, Pictures.PMonth, Pyear, Pictures.PPeoplelist, Pictures.Pthumbnail, Pnamecount
+                string qryPic = @"SELECT Distinct Pfilename,npFileName, Pictures.PMonth, Pyear, Pictures.PPeoplelist, Pictures.Pthumbnail, Pnamecount.Ptype
             FROM NamePhoto
             INNER JOIN Pictures ON NamePhoto.npFileName = Pictures.PFileName
             where PPeoplelist ='1' or Ppeoplelist is NULl or PPeoplelist=''
@@ -116,7 +116,7 @@ namespace FamAlbum
             }
             else
             {
-                string qryPic = @"SELECT Distinct Pfilename,npFileName, Pictures.PMonth, Pyear, Pictures.PPeoplelist, Pictures.Pthumbnail, Pnamecount
+                string qryPic = @"SELECT Distinct Pfilename,npFileName, Pictures.PMonth, Pyear, Pictures.PPeoplelist, Pictures.Pthumbnail, Pnamecount,Ptype
             FROM NamePhoto
             INNER JOIN Pictures ON NamePhoto.npFileName = Pictures.PFileName
             WHERE npID IN (@NLName1,@NLName2,@NLName3,@NLName4,@NLName5)
@@ -184,7 +184,9 @@ namespace FamAlbum
                                 pb.Margin = new Padding(5);
                                 pb.Tag = reader["npFileName"].ToString();
                                 pb.MouseUp += PictureBox_MouseUp;
-
+                                if (Conversions.ToInteger(reader["Ptype"]) == 2) 
+                                { pb.BackColor = Color.LightBlue; }
+                                else { pb.BackColor = Color.White; }
                                 flowPanel.Controls.Add(pb);
                                 x += 1;
                                 if (x > 4999)
@@ -250,34 +252,7 @@ namespace FamAlbum
             flowPanel.Dock = DockStyle.Fill; // Adjust as needed
             flowPanel.AutoScroll = true;
         }
-        private bool CheckPicture(string Names, int cnt)
-        {
-            bool CheckPictureRet = default;
-            var j = default(int);
-            if (NamesSelected[0] != "Exclusive")
-            {
-                CheckPictureRet = true;
-                return CheckPictureRet;
-            }
-            for (int i = 1; i <= 5; i++)
-            {
-                if ((NamesSelected[i] ?? "") == (Names ?? ""))
-                    j += 1;
-            }
-            if (j == cnt)
-            {
-                CheckPictureRet = true;
-            }
-            else
-            {
-                CheckPictureRet = false;
-
-            }
-
-            return CheckPictureRet;
-
-        }
-
+  
         private void MenuItemExit_Click(object sender, EventArgs e)
         {
             try
