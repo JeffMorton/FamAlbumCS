@@ -106,7 +106,7 @@ namespace FamAlbum
 
             if (NamesSelected[0].StartsWith("NP"))
             {
-                string qryPic = @"SELECT Distinct Pfilename,npFileName, Pictures.PMonth, Pyear, Pictures.PPeoplelist, Pictures.Pthumbnail, Pnamecount.Ptype
+                string qryPic = @"SELECT Distinct Pfilename,npFileName, Pictures.PMonth, Pyear, Pictures.PPeoplelist, Pictures.Pthumbnail, Pnamecount,Ptype
             FROM NamePhoto
             INNER JOIN Pictures ON NamePhoto.npFileName = Pictures.PFileName
             where PPeoplelist ='1' or Ppeoplelist is NULl or PPeoplelist=''
